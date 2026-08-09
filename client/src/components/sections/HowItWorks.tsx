@@ -26,7 +26,7 @@ const steps = [
 
 export default function HowItWorks() {
   return (
-    <section className="relative overflow-hidden bg-slate-950 py-28 px-6">
+    <section id="how-it-works" className="relative overflow-hidden bg-slate-950 py-28 px-6">
 
       {/* Background Glow */}
       <div className="absolute left-0 top-0 h-72 w-72 rounded-full bg-violet-600/20 blur-[120px]" />

@@ -1,8 +1,24 @@
+"use client";
+
 import { Button } from "@/components/ui/button";
+import { useRouter } from "next/navigation";
 
 export default function AIPreview() {
+  const router = useRouter();
+
+  const handleTryAI = () => {
+    const token = localStorage.getItem("token");
+
+    if (token) {
+      router.push("/dashboard");
+    } else {
+      router.push("/auth/login");
+    }
+  };
+
   return (
-    <section className="bg-slate-950 px-6 py-24">
+    <section className="px-6 py-24">
+
       <div className="mx-auto grid max-w-7xl items-center gap-16 lg:grid-cols-2">
 
         {/* Left Side */}
@@ -22,7 +38,10 @@ export default function AIPreview() {
             debug errors and learn programming with AI.
           </p>
 
-          <Button className="mt-8 bg-violet-600 hover:bg-violet-700">
+          <Button
+            onClick={handleTryAI}
+            className="mt-8 bg-violet-600 text-white hover:bg-violet-700"
+          >
             Try Dev AI
           </Button>
 
@@ -31,7 +50,6 @@ export default function AIPreview() {
         {/* Right Side */}
         <div className="rounded-3xl border border-slate-800 bg-slate-900 p-6">
 
-          {/* Header */}
           <div className="flex items-center gap-2 border-b border-slate-800 pb-4">
 
             <div className="h-3 w-3 rounded-full bg-red-500" />
@@ -44,20 +62,13 @@ export default function AIPreview() {
 
           </div>
 
-          {/* User Message */}
-
           <div className="mt-6 flex justify-end">
-
             <div className="max-w-sm rounded-2xl bg-violet-600 px-5 py-3 text-white">
               How do I create an API in Next.js?
             </div>
-
           </div>
 
-          {/* AI Message */}
-
           <div className="mt-6">
-
             <div className="max-w-md rounded-2xl bg-slate-800 px-5 py-4 text-slate-300">
 
               You can create an API inside the
@@ -65,22 +76,20 @@ export default function AIPreview() {
               folder.
 
               <div className="mt-4 rounded-xl bg-black p-4 font-mono text-sm text-green-400">
-
-{`export async function GET() {
+                {`export async function GET() {
   return Response.json({
     message: "Hello"
   })
 }`}
-
               </div>
 
             </div>
-
           </div>
 
         </div>
 
       </div>
+
     </section>
   );
 }

@@ -2,7 +2,7 @@ import { FEATURES } from "@/constants/features";
 
 export default function Features() {
   return (
-    <section className="px-6 py-24 bg-slate-900">
+    <section id="features" className="px-6 py-24 bg-slate-900">
       <div className="max-w-7xl mx-auto">
 
         <h2 className="text-4xl font-bold text-center text-white">

@@ -4,6 +4,7 @@ import AIPreview from "@/components/sections/AIPreview";
 import Features from "@/components/sections/Features";
 import HowItWorks from "@/components/sections/HowItWorks";
 import WhyChoose from "@/components/sections/WhyChoose";
+import About from "@/components/sections/About";
 import CTA from "@/components/sections/CTA";
 import Footer from "@/components/layout/Footer";
 
@@ -16,6 +17,7 @@ export default function Home() {
       <Features />
       <HowItWorks />
       <WhyChoose />
+      <About />
       <CTA />
       <Footer />
     </main>
