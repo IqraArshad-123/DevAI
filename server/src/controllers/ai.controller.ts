@@ -692,18 +692,10 @@ export const editMessage = async (
     // =================================================
 
     const messageIndex =
-      conversation.messages.findIndex(
-        (msg) =>
-          msg._id?.toString() === messageId
-      );
-
-    if (messageIndex === -1) {
-      res.status(404).json({
-        success: false,
-        message: "Message not found",
-      });
-      return;
-    }
+  conversation.messages.findIndex(
+    (msg) =>
+      msg._id?.toString() === messageId
+  );
 
     // =================================================
     // ONLY USER MESSAGE CAN BE EDITED

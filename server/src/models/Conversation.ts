@@ -1,10 +1,19 @@
 import mongoose, { Document, Schema } from "mongoose";
 
+// =====================================================
+// MESSAGE INTERFACE
+// =====================================================
+
 export interface IMessage {
+  _id?: mongoose.Types.ObjectId;
   role: "user" | "assistant";
   content: string;
   createdAt: Date;
 }
+
+// =====================================================
+// CONVERSATION INTERFACE
+// =====================================================
 
 export interface IConversation extends Document {
   user: mongoose.Types.ObjectId;
@@ -13,6 +22,10 @@ export interface IConversation extends Document {
   createdAt: Date;
   updatedAt: Date;
 }
+
+// =====================================================
+// MESSAGE SCHEMA
+// =====================================================
 
 const messageSchema = new Schema<IMessage>(
   {
@@ -29,9 +42,16 @@ const messageSchema = new Schema<IMessage>(
   },
   {
     timestamps: true,
-    _id: false,
+
+    // IMPORTANT:
+    // Har message ko apna unique _id milega.
+    _id: true,
   }
 );
+
+// =====================================================
+// CONVERSATION SCHEMA
+// =====================================================
 
 const conversationSchema = new Schema<IConversation>(
   {
@@ -57,6 +77,10 @@ const conversationSchema = new Schema<IConversation>(
     timestamps: true,
   }
 );
+
+// =====================================================
+// MODEL
+// =====================================================
 
 export default mongoose.model<IConversation>(
   "Conversation",

@@ -8,35 +8,61 @@ import remarkGfm from "remark-gfm";
 import { Prism as SyntaxHighlighter } from "react-syntax-highlighter";
 import { oneDark } from "react-syntax-highlighter/dist/esm/styles/prism";
 
+// =====================================================
+// MESSAGE TYPE
+// =====================================================
+
 type Message = {
+  _id?: string;
   role: "user" | "assistant";
   content: string;
+  createdAt?: string;
 };
+
+// =====================================================
+// COMPONENT
+// =====================================================
 
 export default function ChatWindow() {
   const router = useRouter();
   const searchParams = useSearchParams();
 
+  // ===================================================
+  // STATE
+  // ===================================================
+
   const [message, setMessage] = useState("");
   const [messages, setMessages] = useState<Message[]>([]);
   const [loading, setLoading] = useState(false);
 
-  // =====================================================
-  // COPY STATE
-  // =====================================================
+  // Edit state
+  const [editingMessageId, setEditingMessageId] =
+    useState<string | null>(null);
 
-  const [copied, setCopied] = useState<string | null>(null);
+  const [editingText, setEditingText] =
+    useState("");
 
-  // =====================================================
+  const [editLoading, setEditLoading] =
+    useState(false);
+
+  // Regenerate state
+  const [regenerating, setRegenerating] =
+    useState(false);
+
+  // Copy state
+  const [copiedCode, setCopiedCode] =
+    useState<string | null>(null);
+
+  // ===================================================
   // CONVERSATION ID
-  // =====================================================
+  // ===================================================
 
   const conversationId =
     searchParams.get("conversationId");
 
-  // =====================================================
+  // ===================================================
   // PROMPT PAGE SE AANE WALA PROMPT
-  // =====================================================
+  // ===================================================
 
   useEffect(() => {
     const prompt = searchParams.get("prompt");
@@ -46,20 +72,21 @@ export default function ChatWindow() {
     }
   }, [searchParams, conversationId]);
 
-  // =====================================================
+  // ===================================================
   // LOAD SAVED CONVERSATION
-  // =====================================================
+  // ===================================================
 
   useEffect(() => {
     const loadConversation = async () => {
-      // New chat hai
+      // New chat
       if (!conversationId) {
         setMessages([]);
         return;
       }
 
       try {
-        const token = localStorage.getItem("token");
+        const token =
+          localStorage.getItem("token");
 
         if (!token) {
           console.error(
@@ -90,11 +117,17 @@ export default function ChatWindow() {
         const savedMessages: Message[] =
           data.conversation.messages.map(
             (msg: {
-              role: "user" | "assistant";
+              _id?: string;
+              role:
+                | "user"
+                | "assistant";
               content: string;
+              createdAt?: string;
             }) => ({
+              _id: msg._id,
               role: msg.role,
               content: msg.content,
+              createdAt: msg.createdAt,
             })
           );
 
@@ -110,38 +143,17 @@ export default function ChatWindow() {
     loadConversation();
   }, [conversationId]);
 
-  // =====================================================
-  // COPY TO CLIPBOARD
-  // =====================================================
-
-  const copyToClipboard = async (
-    text: string,
-    id: string
-  ) => {
-    try {
-      await navigator.clipboard.writeText(text);
-
-      setCopied(id);
-
-      setTimeout(() => {
-        setCopied(null);
-      }, 2000);
-    } catch (error) {
-      console.error(
-        "Copy Error:",
-        error
-      );
-    }
-  };
-
-  // =====================================================
+  // ===================================================
   // SEND MESSAGE
-  // =====================================================
+  // ===================================================
 
   const sendMessage = async () => {
-    if (!message.trim() || loading) return;
+    if (!message.trim() || loading) {
+      return;
+    }
 
-    const userMessage = message.trim();
+    const userMessage =
+      message.trim();
 
     // Immediately UI mein user message show
     setMessages((prev) => [
@@ -156,7 +168,8 @@ export default function ChatWindow() {
     setLoading(true);
 
     try {
-      const token = localStorage.getItem("token");
+      const token =
+        localStorage.getItem("token");
 
       if (!token) {
         throw new Error(
@@ -169,15 +182,15 @@ export default function ChatWindow() {
         {
           method: "POST",
           headers: {
-            "Content-Type": "application/json",
+            "Content-Type":
+              "application/json",
             Authorization: `Bearer ${token}`,
           },
           body: JSON.stringify({
             message: userMessage,
-
-            // Existing conversation mein same ID jayegi
             conversationId:
-              conversationId || undefined,
+              conversationId ||
+              undefined,
           }),
         }
       );
@@ -211,8 +224,6 @@ export default function ChatWindow() {
         const newConversationId =
           data.conversationId.toString();
 
-        // URL mein conversation ID save
-        // Is se refresh ke baad same chat load hogi.
         router.replace(
           `/chat?conversationId=${newConversationId}`
         );
@@ -236,12 +247,335 @@ export default function ChatWindow() {
     }
   };
 
-  // =====================================================
-  // UI
-  // =====================================================
+  // ===================================================
+  // START EDITING USER MESSAGE
+  // ===================================================
+
+  const startEditing = (
+    msg: Message
+  ) => {
+    if (!msg._id) {
+      console.warn(
+        "This message does not have an ID"
+      );
+      return;
+    }
+
+    setEditingMessageId(msg._id);
+    setEditingText(msg.content);
+  };
+
+  // ===================================================
+  // CANCEL EDIT
+  // ===================================================
+
+  const cancelEditing = () => {
+    setEditingMessageId(null);
+    setEditingText("");
+  };
+
+  // ===================================================
+  // SAVE EDITED MESSAGE
+  // ===================================================
+
+  const saveEditedMessage = async () => {
+    if (
+      !editingMessageId ||
+      !editingText.trim() ||
+      !conversationId ||
+      editLoading
+    ) {
+      return;
+    }
+
+    setEditLoading(true);
+
+    try {
+      const token =
+        localStorage.getItem("token");
+
+      if (!token) {
+        throw new Error(
+          "Authentication token not found"
+        );
+      }
+
+      const response = await fetch(
+        "http://localhost:5000/api/ai/edit-message",
+        {
+          method: "POST",
+          headers: {
+            "Content-Type":
+              "application/json",
+            Authorization: `Bearer ${token}`,
+          },
+          body: JSON.stringify({
+            conversationId,
+            messageId:
+              editingMessageId,
+            message:
+              editingText.trim(),
+          }),
+        }
+      );
+
+      const data = await response.json();
+
+      if (!response.ok) {
+        throw new Error(
+          data.message ||
+            "Failed to edit message"
+        );
+      }
+
+      // =================================================
+      // BACKEND UPDATED CONVERSATION
+      // =================================================
+
+      if (data.conversation) {
+        const updatedMessages: Message[] =
+          data.conversation.messages.map(
+            (msg: {
+              _id?: string;
+              role:
+                | "user"
+                | "assistant";
+              content: string;
+              createdAt?: string;
+            }) => ({
+              _id: msg._id,
+              role: msg.role,
+              content: msg.content,
+              createdAt:
+                msg.createdAt,
+            })
+          );
+
+        setMessages(updatedMessages);
+      } else if (data.answer) {
+        // Fallback agar backend sirf answer bheje
+        setMessages((prev) => {
+          const updated = [...prev];
+
+          const index =
+            updated.findIndex(
+              (msg) =>
+                msg._id ===
+                editingMessageId
+            );
+
+          if (index !== -1) {
+            updated[index] = {
+              ...updated[index],
+              content:
+                editingText.trim(),
+            };
+
+            // Agar next message assistant hai
+            if (
+              updated[index + 1]
+                ?.role ===
+              "assistant"
+            ) {
+              updated[
+                index + 1
+              ] = {
+                ...updated[index + 1],
+                content: data.answer,
+              };
+            }
+          }
+
+          return updated;
+        });
+      }
+
+      // Exit edit mode
+      setEditingMessageId(null);
+      setEditingText("");
+    } catch (error) {
+      console.error(
+        "Edit Message Error:",
+        error
+      );
+
+      alert(
+        "Failed to edit message. Please try again."
+      );
+    } finally {
+      setEditLoading(false);
+    }
+  };
+
+  // ===================================================
+  // REGENERATE AI RESPONSE
+  // ===================================================
+
+  const regenerateResponse =
+    async () => {
+      if (
+        !conversationId ||
+        regenerating ||
+        loading
+      ) {
+        return;
+      }
+
+      setRegenerating(true);
+
+      try {
+        const token =
+          localStorage.getItem("token");
+
+        if (!token) {
+          throw new Error(
+            "Authentication token not found"
+          );
+        }
+
+        const response = await fetch(
+          "http://localhost:5000/api/ai/regenerate",
+          {
+            method: "POST",
+            headers: {
+              "Content-Type":
+                "application/json",
+              Authorization: `Bearer ${token}`,
+            },
+            body: JSON.stringify({
+              conversationId,
+            }),
+          }
+        );
+
+        const data =
+          await response.json();
+
+        if (!response.ok) {
+          throw new Error(
+            data.message ||
+              "Failed to regenerate response"
+          );
+        }
+
+        // =================================================
+        // UPDATE LAST ASSISTANT MESSAGE
+        // =================================================
+
+        if (data.answer) {
+          setMessages((prev) => {
+            const updated = [...prev];
+
+            // Last assistant message find karo
+            for (
+              let i =
+                updated.length - 1;
+              i >= 0;
+              i--
+            ) {
+              if (
+                updated[i].role ===
+                "assistant"
+              ) {
+                updated[i] = {
+                  ...updated[i],
+                  content:
+                    data.answer,
+                };
+
+                break;
+              }
+            }
+
+            return updated;
+          });
+        }
+
+        // Agar backend complete conversation return kare
+        if (data.conversation) {
+          const updatedMessages: Message[] =
+            data.conversation.messages.map(
+              (msg: {
+                _id?: string;
+                role:
+                  | "user"
+                  | "assistant";
+                content: string;
+                createdAt?: string;
+              }) => ({
+                _id: msg._id,
+                role: msg.role,
+                content: msg.content,
+                createdAt:
+                  msg.createdAt,
+              })
+            );
+
+          setMessages(
+            updatedMessages
+          );
+        }
+      } catch (error) {
+        console.error(
+          "Regenerate Error:",
+          error
+        );
+
+        alert(
+          "Failed to regenerate response. Please try again."
+        );
+      } finally {
+        setRegenerating(false);
+      }
+    };
+
+  // ===================================================
+  // COPY CODE
+  // ===================================================
+
+  const copyCode = async (
+    code: string
+  ) => {
+    try {
+      await navigator.clipboard.writeText(
+        code
+      );
+
+      setCopiedCode(code);
+
+      setTimeout(() => {
+        setCopiedCode(null);
+      }, 2000);
+    } catch (error) {
+      console.error(
+        "Copy Error:",
+        error
+      );
+    }
+  };
+
+  // ===================================================
+  // CHECK LAST ASSISTANT MESSAGE
+  // ===================================================
+
+  const lastAssistantIndex =
+    [...messages]
+      .map((msg, index) => ({
+        msg,
+        index,
+      }))
+      .reverse()
+      .find(
+        ({ msg }) =>
+          msg.role === "assistant"
+      )?.index;
+
+  // ===================================================
+  // RENDER
+  // ===================================================
 
   return (
-    <div className="flex min-h-[calc(100vh-2rem)] flex-col overflow-hidden rounded-3xl border border-white/10 bg-[#070a18] shadow-2xl shadow-black/30 sm:min-h-[calc(100vh-3rem)]">
+    <div className="flex min-h-[calc(100vh-2rem)] flex-col overflow-hidden rounded-3xl border border-white/10 bg-[#080b18] shadow-2xl shadow-black/30">
 
       {/* =====================================================
           HEADER
@@ -262,6 +596,7 @@ export default function ChatWindow() {
 
             <div className="mt-0.5 flex items-center gap-2 text-sm text-slate-400">
               <span className="h-2 w-2 rounded-full bg-emerald-400 shadow-sm shadow-emerald-400/70" />
+
               AI Assistant
             </div>
           </div>
@@ -282,9 +617,9 @@ export default function ChatWindow() {
 
         <div className="mx-auto max-w-5xl space-y-7">
 
-          {/* =====================================================
+          {/* =================================================
               EMPTY STATE
-          ===================================================== */}
+          ================================================= */}
 
           {messages.length === 0 && (
             <div className="flex min-h-full items-center justify-center py-20 text-center">
@@ -300,8 +635,10 @@ export default function ChatWindow() {
                 </h2>
 
                 <p className="mx-auto mt-4 max-w-xl text-base leading-7 text-slate-400 sm:text-lg">
-                  Ask Dev AI anything about coding,
-                  learning, debugging or development.
+                  Ask Dev AI anything
+                  about coding,
+                  learning, debugging
+                  or development.
                 </p>
 
                 <div className="mt-9 grid gap-3 sm:grid-cols-3">
@@ -346,395 +683,519 @@ export default function ChatWindow() {
             </div>
           )}
 
-          {/* =====================================================
+          {/* =================================================
               CHAT MESSAGES
-          ===================================================== */}
+          ================================================= */}
 
-          {messages.map((msg, index) => (
+          {messages.map(
+            (msg, index) => {
 
-            <div
-              key={index}
-              className={`flex ${
-                msg.role === "user"
-                  ? "justify-end"
-                  : "justify-start"
-              }`}
-            >
+              const isEditing =
+                editingMessageId ===
+                msg._id;
 
-              <div
-                className={`flex w-full items-start gap-3 ${
-                  msg.role === "user"
-                    ? "max-w-3xl flex-row-reverse"
-                    : "max-w-4xl"
-                }`}
-              >
+              const isLastAssistant =
+                index ===
+                  lastAssistantIndex &&
+                msg.role ===
+                  "assistant";
 
-                {/* =================================================
-                    AVATAR
-                ================================================= */}
-
+              return (
                 <div
-                  className={`flex h-10 w-10 shrink-0 items-center justify-center rounded-xl text-sm font-semibold ${
+                  key={
+                    msg._id ||
+                    `${msg.role}-${index}`
+                  }
+                  className={`group flex ${
                     msg.role === "user"
-                      ? "bg-linear-to-br from-violet-600 to-purple-600 text-white shadow-lg shadow-violet-900/30"
-                      : "border border-violet-500/20 bg-violet-500/10 text-violet-300"
+                      ? "justify-end"
+                      : "justify-start"
                   }`}
                 >
-                  {msg.role === "user"
-                    ? "U"
-                    : "✦"}
-                </div>
-
-                {/* =================================================
-                    MESSAGE AREA
-                ================================================= */}
-
-                <div className="min-w-0">
-
-                  {/* =================================================
-                      MESSAGE BUBBLE
-                  ================================================= */}
 
                   <div
-                    className={`min-w-0 rounded-2xl px-5 py-4 shadow-xl sm:px-6 sm:py-5 ${
-                      msg.role === "user"
-                        ? "bg-linear-to-r from-violet-600 to-purple-600 text-white shadow-violet-950/30"
-                        : "border border-white/10 bg-[#111528] text-slate-200 shadow-black/20"
+                    className={`flex w-full items-start gap-3 ${
+                      msg.role ===
+                      "user"
+                        ? "max-w-3xl flex-row-reverse"
+                        : "max-w-4xl"
                     }`}
                   >
 
                     {/* =================================================
-                        USER MESSAGE
+                        AVATAR
                     ================================================= */}
 
-                    {msg.role === "user" ? (
+                    <div
+                      className={`flex h-10 w-10 shrink-0 items-center justify-center rounded-xl text-sm font-semibold ${
+                        msg.role ===
+                        "user"
+                          ? "bg-linear-to-br from-violet-600 to-purple-600 text-white shadow-lg shadow-violet-900/30"
+                          : "border border-violet-500/20 bg-violet-500/10 text-violet-300"
+                      }`}
+                    >
+                      {msg.role ===
+                      "user"
+                        ? "U"
+                        : "✦"}
+                    </div>
 
-                      <p className="text-[16px] leading-7 sm:text-[17px] sm:leading-8">
-                        {msg.content}
-                      </p>
+                    {/* =================================================
+                        MESSAGE AREA
+                    ================================================= */}
 
-                    ) : (
+                    <div className="min-w-0">
 
-                      /* =================================================
-                         AI MESSAGE
-                      ================================================= */
+                      {/* =================================================
+                          USER MESSAGE
+                      ================================================= */}
 
-                      <div className="prose prose-invert max-w-none text-[16px] leading-8 sm:text-[17px] sm:leading-8">
+                      {msg.role ===
+                      "user" ? (
+                        <>
 
-                        <ReactMarkdown
-                          remarkPlugins={[remarkGfm]}
-                          components={{
+                          {isEditing ? (
+                            <div className="min-w-70 rounded-2xl bg-linear-to-r from-violet-600 to-purple-600 p-4 shadow-xl shadow-violet-950/30 sm:min-w-112.5">
 
-                            /* ================================
-                               HEADINGS
-                            ================================= */
+                              <textarea
+                                value={
+                                  editingText
+                                }
+                                onChange={(
+                                  e
+                                ) =>
+                                  setEditingText(
+                                    e
+                                      .target
+                                      .value
+                                  )
+                                }
+                                autoFocus
+                                rows={4}
+                                className="w-full resize-none rounded-xl border border-white/20 bg-black/20 p-4 text-[16px] leading-7 text-white outline-none placeholder:text-white/50"
+                                placeholder="Edit your message..."
+                              />
 
-                            h1: ({ children }) => (
-                              <h1 className="mb-5 mt-2 text-2xl font-bold text-white sm:text-3xl">
-                                {children}
-                              </h1>
-                            ),
+                              <div className="mt-3 flex justify-end gap-2">
 
-                            h2: ({ children }) => (
-                              <h2 className="mb-4 mt-7 text-xl font-bold text-white sm:text-2xl">
-                                {children}
-                              </h2>
-                            ),
+                                <button
+                                  onClick={
+                                    cancelEditing
+                                  }
+                                  disabled={
+                                    editLoading
+                                  }
+                                  className="rounded-lg border border-white/20 bg-white/10 px-4 py-2 text-sm font-medium text-white transition hover:bg-white/20 disabled:opacity-50"
+                                >
+                                  Cancel
+                                </button>
 
-                            h3: ({ children }) => (
-                              <h3 className="mb-3 mt-6 text-lg font-semibold text-violet-200 sm:text-xl">
-                                {children}
-                              </h3>
-                            ),
+                                <button
+                                  onClick={
+                                    saveEditedMessage
+                                  }
+                                  disabled={
+                                    editLoading ||
+                                    !editingText.trim()
+                                  }
+                                  className="rounded-lg bg-white px-4 py-2 text-sm font-semibold text-violet-700 transition hover:bg-slate-100 disabled:cursor-not-allowed disabled:opacity-50"
+                                >
+                                  {editLoading
+                                    ? "Saving..."
+                                    : "Save & Ask"}
+                                </button>
 
-                            /* ================================
-                               PARAGRAPH
-                            ================================= */
+                              </div>
 
-                            p: ({ children }) => (
-                              <p className="mb-5 text-[16px] leading-8 text-slate-200 sm:text-[17px] sm:leading-8">
-                                {children}
-                              </p>
-                            ),
+                            </div>
+                          ) : (
+                            <div className="relative">
 
-                            /* ================================
-                               LISTS
-                            ================================= */
+                              <div className="rounded-2xl bg-linear-to-r from-violet-600 to-purple-600 px-5 py-4 text-white shadow-xl shadow-violet-950/30 sm:px-6 sm:py-5">
 
-                            ul: ({ children }) => (
-                              <ul className="mb-5 ml-6 list-disc space-y-2 text-[16px] leading-8 text-slate-200 sm:text-[17px]">
-                                {children}
-                              </ul>
-                            ),
+                                <p className="text-[16px] leading-7 sm:text-[17px] sm:leading-8">
+                                  {
+                                    msg.content
+                                  }
+                                </p>
 
-                            ol: ({ children }) => (
-                              <ol className="mb-5 ml-6 list-decimal space-y-2 text-[16px] leading-8 text-slate-200 sm:text-[17px]">
-                                {children}
-                              </ol>
-                            ),
+                              </div>
 
-                            li: ({ children }) => (
-                              <li className="pl-1">
-                                {children}
-                              </li>
-                            ),
+                              {/* EDIT BUTTON */}
 
-                            /* ================================
-                               TEXT
-                            ================================= */
+                              {msg._id && (
+                                <div className="mt-2 flex justify-end opacity-0 transition group-hover:opacity-100">
 
-                            strong: ({ children }) => (
-                              <strong className="font-bold text-white">
-                                {children}
-                              </strong>
-                            ),
-
-                            em: ({ children }) => (
-                              <em className="text-violet-200">
-                                {children}
-                              </em>
-                            ),
-
-                            /* ================================
-                               BLOCKQUOTE
-                            ================================= */
-
-                            blockquote: ({
-                              children,
-                            }) => (
-                              <blockquote className="my-5 border-l-4 border-violet-500 bg-violet-500/5 px-5 py-3 text-slate-300">
-                                {children}
-                              </blockquote>
-                            ),
-
-                            /* ================================
-                               HORIZONTAL RULE
-                            ================================= */
-
-                            hr: () => (
-                              <hr className="my-7 border-white/10" />
-                            ),
-
-                            /* ================================
-                               CODE
-                            ================================= */
-
-                            code: ({
-                              children,
-                              className,
-                            }) => {
-
-                              const match =
-                                /language-(\w+)/.exec(
-                                  className || ""
-                                );
-
-                              const codeContent =
-                                String(children).replace(
-                                  /\n$/,
-                                  ""
-                                );
-
-                              const isInline =
-                                !match;
-
-                              /* ============================
-                                 INLINE CODE
-                              ============================ */
-
-                              if (isInline) {
-                                return (
-                                  <code className="rounded-md bg-violet-500/10 px-1.5 py-0.5 font-mono text-[14px] text-violet-300">
-                                    {children}
-                                  </code>
-                                );
-                              }
-
-                              /* ============================
-                                 CODE BLOCK
-                              ============================ */
-
-                              const codeId =
-                                `code-${index}`;
-
-                              return (
-                                <div className="relative my-6 overflow-hidden rounded-xl border border-white/10 bg-[#070914] shadow-inner">
-
-                                  {/* CODE HEADER */}
-
-                                  <div className="flex items-center justify-between border-b border-white/10 bg-white/5 px-4 py-2">
-
-                                    <span className="text-xs font-medium uppercase tracking-wide text-slate-500">
-                                      {match?.[1] ||
-                                        "code"}
+                                  <button
+                                    onClick={() =>
+                                      startEditing(
+                                        msg
+                                      )
+                                    }
+                                    disabled={
+                                      loading ||
+                                      editLoading ||
+                                      regenerating
+                                    }
+                                    className="flex items-center gap-1.5 rounded-lg border border-white/10 bg-white/5 px-3 py-1.5 text-xs font-medium text-slate-400 transition hover:border-violet-500/30 hover:bg-violet-500/10 hover:text-violet-300 disabled:cursor-not-allowed disabled:opacity-40"
+                                  >
+                                    <span>
+                                      ✏️
                                     </span>
 
-                                    <button
-                                      onClick={() =>
-                                        copyToClipboard(
-                                          codeContent,
-                                          codeId
-                                        )
-                                      }
-                                      className="rounded-lg border border-white/10 bg-white/5 px-3 py-1.5 text-xs font-medium text-slate-300 transition hover:bg-white/10 hover:text-white"
-                                    >
-                                      {copied ===
-                                      codeId ? (
-                                        <span className="flex items-center gap-1.5 text-emerald-400">
-                                          ✓ Copied
-                                        </span>
-                                      ) : (
-                                        "Copy"
-                                      )}
-                                    </button>
-
-                                  </div>
-
-                                  {/* CODE */}
-
-                                  <SyntaxHighlighter
-                                    style={oneDark}
-                                    language={
-                                      match?.[1] ||
-                                      "text"
-                                    }
-                                    PreTag="div"
-                                    customStyle={{
-                                      margin: 0,
-                                      padding:
-                                        "20px",
-                                      background:
-                                        "#070914",
-                                      fontSize:
-                                        "14px",
-                                      lineHeight:
-                                        "1.7",
-                                    }}
-                                    codeTagProps={{
-                                      style: {
-                                        fontFamily:
-                                          "monospace",
-                                      },
-                                    }}
-                                  >
-                                    {
-                                      codeContent
-                                    }
-                                  </SyntaxHighlighter>
+                                    Edit
+                                  </button>
 
                                 </div>
-                              );
-                            },
+                              )}
 
-                            /* ================================
-                               PRE
-                            ================================= */
+                            </div>
+                          )}
 
-                            pre: ({
-                              children,
-                            }) => (
-                              <pre className="overflow-x-auto">
-                                {children}
-                              </pre>
-                            ),
+                        </>
+                      ) : (
 
-                            /* ================================
-                               LINKS
-                            ================================= */
+                        /* =================================================
+                           ASSISTANT MESSAGE
+                        ================================================= */
 
-                            a: ({
-                              children,
-                              href,
-                            }) => (
-                              <a
-                                href={href}
-                                target="_blank"
-                                rel="noopener noreferrer"
-                                className="text-violet-400 underline underline-offset-4 hover:text-violet-300"
+                        <>
+
+                          <div className="rounded-2xl border border-white/10 bg-[#111528] px-5 py-4 text-slate-200 shadow-xl shadow-black/20 sm:px-6 sm:py-5">
+
+                            <div className="prose prose-invert max-w-none text-[16px] leading-8 sm:text-[17px] sm:leading-8">
+
+                              <ReactMarkdown
+                                remarkPlugins={[
+                                  remarkGfm,
+                                ]}
+                                components={{
+                                  h1: ({
+                                    children,
+                                  }) => (
+                                    <h1 className="mb-5 mt-2 text-2xl font-bold text-white sm:text-3xl">
+                                      {
+                                        children
+                                      }
+                                    </h1>
+                                  ),
+
+                                  h2: ({
+                                    children,
+                                  }) => (
+                                    <h2 className="mb-4 mt-7 text-xl font-bold text-white sm:text-2xl">
+                                      {
+                                        children
+                                      }
+                                    </h2>
+                                  ),
+
+                                  h3: ({
+                                    children,
+                                  }) => (
+                                    <h3 className="mb-3 mt-6 text-lg font-semibold text-violet-200 sm:text-xl">
+                                      {
+                                        children
+                                      }
+                                    </h3>
+                                  ),
+
+                                  p: ({
+                                    children,
+                                  }) => (
+                                    <p className="mb-5 text-[16px] leading-8 text-slate-200 sm:text-[17px] sm:leading-8">
+                                      {
+                                        children
+                                      }
+                                    </p>
+                                  ),
+
+                                  ul: ({
+                                    children,
+                                  }) => (
+                                    <ul className="mb-5 ml-6 list-disc space-y-2 text-[16px] leading-8 text-slate-200 sm:text-[17px]">
+                                      {
+                                        children
+                                      }
+                                    </ul>
+                                  ),
+
+                                  ol: ({
+                                    children,
+                                  }) => (
+                                    <ol className="mb-5 ml-6 list-decimal space-y-2 text-[16px] leading-8 text-slate-200 sm:text-[17px]">
+                                      {
+                                        children
+                                      }
+                                    </ol>
+                                  ),
+
+                                  li: ({
+                                    children,
+                                  }) => (
+                                    <li className="pl-1">
+                                      {
+                                        children
+                                      }
+                                    </li>
+                                  ),
+
+                                  strong: ({
+                                    children,
+                                  }) => (
+                                    <strong className="font-bold text-white">
+                                      {
+                                        children
+                                      }
+                                    </strong>
+                                  ),
+
+                                  em: ({
+                                    children,
+                                  }) => (
+                                    <em className="text-violet-200">
+                                      {
+                                        children
+                                      }
+                                    </em>
+                                  ),
+
+                                  blockquote: ({
+                                    children,
+                                  }) => (
+                                    <blockquote className="my-5 border-l-4 border-violet-500 bg-violet-500/5 px-5 py-3 text-slate-300">
+                                      {
+                                        children
+                                      }
+                                    </blockquote>
+                                  ),
+
+                                  hr: () => (
+                                    <hr className="my-7 border-white/10" />
+                                  ),
+
+                                  code: ({
+                                    children,
+                                    className,
+                                  }) => {
+                                    const code =
+                                      String(
+                                        children
+                                      ).replace(
+                                        /\n$/,
+                                        ""
+                                      );
+
+                                    const match =
+                                      /language-(\w+)/.exec(
+                                        className ||
+                                          ""
+                                      );
+
+                                    // Inline code
+                                    if (
+                                      !className
+                                    ) {
+                                      return (
+                                        <code className="rounded-md bg-violet-500/10 px-1.5 py-0.5 font-mono text-[14px] text-violet-300">
+                                          {
+                                            children
+                                          }
+                                        </code>
+                                      );
+                                    }
+
+                                    // Code language
+                                    const language =
+                                      match?.[1] ||
+                                      "text";
+
+                                    return (
+                                      <div className="my-6 overflow-hidden rounded-xl border border-white/10 bg-[#070914] shadow-inner">
+
+                                        {/* CODE HEADER */}
+
+                                        <div className="flex items-center justify-between border-b border-white/10 bg-white/5 px-4 py-2">
+
+                                          <span className="text-xs font-medium uppercase tracking-wide text-slate-400">
+                                            {
+                                              language
+                                            }
+                                          </span>
+
+                                          <button
+                                            onClick={() =>
+                                              copyCode(
+                                                code
+                                              )
+                                            }
+                                            className="rounded-lg border border-white/10 bg-white/5 px-3 py-1.5 text-xs font-medium text-slate-300 transition hover:bg-white/10 hover:text-white"
+                                          >
+                                            {copiedCode ===
+                                            code
+                                              ? "✓ Copied"
+                                              : "Copy"}
+                                          </button>
+
+                                        </div>
+
+                                        <SyntaxHighlighter
+                                          style={
+                                            oneDark
+                                          }
+                                          language={
+                                            language
+                                          }
+                                          PreTag="div"
+                                          customStyle={{
+                                            margin:
+                                              0,
+                                            padding:
+                                              "20px",
+                                            background:
+                                              "#070914",
+                                            fontSize:
+                                              "14px",
+                                            lineHeight:
+                                              "1.75",
+                                            overflowX:
+                                              "auto",
+                                          }}
+                                        >
+                                          {
+                                            code
+                                          }
+                                        </SyntaxHighlighter>
+
+                                      </div>
+                                    );
+                                  },
+
+                                  pre: ({
+                                    children,
+                                  }) => (
+                                    <pre className="my-6 overflow-x-auto rounded-xl border border-white/10 bg-[#070914] p-0 shadow-inner">
+                                      {
+                                        children
+                                      }
+                                    </pre>
+                                  ),
+
+                                  a: ({
+                                    children,
+                                    href,
+                                  }) => (
+                                    <a
+                                      href={
+                                        href
+                                      }
+                                      target="_blank"
+                                      rel="noopener noreferrer"
+                                      className="text-violet-400 underline underline-offset-4 hover:text-violet-300"
+                                    >
+                                      {
+                                        children
+                                      }
+                                    </a>
+                                  ),
+
+                                  table: ({
+                                    children,
+                                  }) => (
+                                    <div className="my-6 overflow-x-auto rounded-xl border border-white/10">
+                                      <table className="w-full border-collapse text-left text-sm">
+                                        {
+                                          children
+                                        }
+                                      </table>
+                                    </div>
+                                  ),
+
+                                  th: ({
+                                    children,
+                                  }) => (
+                                    <th className="border-b border-white/10 bg-white/5 px-4 py-3 font-semibold text-white">
+                                      {
+                                        children
+                                      }
+                                    </th>
+                                  ),
+
+                                  td: ({
+                                    children,
+                                  }) => (
+                                    <td className="border-b border-white/5 px-4 py-3 text-slate-300">
+                                      {
+                                        children
+                                      }
+                                    </td>
+                                  ),
+                                }}
                               >
-                                {children}
-                              </a>
-                            ),
+                                {
+                                  msg.content
+                                }
+                              </ReactMarkdown>
 
-                            /* ================================
-                               TABLE
-                            ================================= */
+                            </div>
 
-                            table: ({
-                              children,
-                            }) => (
-                              <div className="my-6 overflow-x-auto rounded-xl border border-white/10">
-                                <table className="w-full border-collapse text-left text-sm">
-                                  {children}
-                                </table>
-                              </div>
-                            ),
+                          </div>
 
-                            th: ({ children }) => (
-                              <th className="border-b border-white/10 bg-white/5 px-4 py-3 font-semibold text-white">
-                                {children}
-                              </th>
-                            ),
+                          {/* =================================================
+                              REGENERATE BUTTON
+                          ================================================= */}
 
-                            td: ({ children }) => (
-                              <td className="border-b border-white/5 px-4 py-3 text-slate-300">
-                                {children}
-                              </td>
-                            ),
+                          {isLastAssistant && (
+                            <div className="mt-2 flex justify-start opacity-0 transition group-hover:opacity-100">
 
-                          }}
-                        >
-                          {msg.content}
-                        </ReactMarkdown>
+                              <button
+                                onClick={
+                                  regenerateResponse
+                                }
+                                disabled={
+                                  regenerating ||
+                                  loading ||
+                                  editLoading
+                                }
+                                className="flex items-center gap-1.5 rounded-lg border border-white/10 bg-white/5 px-3 py-1.5 text-xs font-medium text-slate-400 transition hover:border-violet-500/30 hover:bg-violet-500/10 hover:text-violet-300 disabled:cursor-not-allowed disabled:opacity-40"
+                              >
+                                <span
+                                  className={
+                                    regenerating
+                                      ? "animate-spin"
+                                      : ""
+                                  }
+                                >
+                                  🔄
+                                </span>
 
-                      </div>
-                    )}
+                                {regenerating
+                                  ? "Regenerating..."
+                                  : "Regenerate"}
+                              </button>
+
+                            </div>
+                          )}
+
+                        </>
+                      )}
+
+                    </div>
 
                   </div>
 
-                  {/* =================================================
-                      AI MESSAGE ACTIONS
-                  ================================================= */}
-
-                  {msg.role === "assistant" && (
-                    <div className="mt-2 flex items-center gap-2">
-
-                      <button
-                        onClick={() =>
-                          copyToClipboard(
-                            msg.content,
-                            `response-${index}`
-                          )
-                        }
-                        disabled={loading}
-                        className="rounded-lg px-3 py-1.5 text-xs font-medium text-slate-500 transition hover:bg-white/5 hover:text-slate-300 disabled:cursor-not-allowed disabled:opacity-40"
-                      >
-                        {copied ===
-                        `response-${index}` ? (
-                          <span className="flex items-center gap-1.5 text-emerald-400">
-                            ✓ Copied
-                          </span>
-                        ) : (
-                          "Copy response"
-                        )}
-                      </button>
-
-                    </div>
-                  )}
-
                 </div>
+              );
+            }
+          )}
 
-              </div>
-
-            </div>
-
-          ))}
-
-          {/* =====================================================
+          {/* =================================================
               LOADING
-          ===================================================== */}
+          ================================================= */}
 
-          {loading && (
+          {(loading ||
+            regenerating ||
+            editLoading) && (
             <div className="flex items-start gap-3">
 
               <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-xl border border-violet-500/20 bg-violet-500/10 text-violet-300">
@@ -774,32 +1235,47 @@ export default function ChatWindow() {
             type="text"
             value={message}
             onChange={(e) =>
-              setMessage(e.target.value)
+              setMessage(
+                e.target.value
+              )
             }
             onKeyDown={(e) => {
-              if (e.key === "Enter") {
+              if (
+                e.key === "Enter"
+              ) {
                 sendMessage();
               }
             }}
+            disabled={
+              loading ||
+              regenerating ||
+              editLoading
+            }
             placeholder="Ask Dev AI anything..."
-            className="min-w-0 flex-1 bg-transparent px-3 py-3 text-[16px] text-white outline-none placeholder:text-slate-500 sm:text-[17px]"
+            className="min-w-0 flex-1 bg-transparent px-3 py-3 text-[16px] text-white outline-none placeholder:text-slate-500 disabled:opacity-50 sm:text-[17px]"
           />
 
           <button
             onClick={sendMessage}
             disabled={
               loading ||
+              regenerating ||
+              editLoading ||
               !message.trim()
             }
             className="rounded-xl bg-linear-to-r from-violet-600 to-purple-600 px-6 py-3 text-[15px] font-semibold text-white shadow-lg shadow-violet-900/30 transition hover:scale-[1.02] hover:from-violet-500 hover:to-purple-500 disabled:cursor-not-allowed disabled:opacity-40 disabled:hover:scale-100"
           >
-            {loading ? "..." : "Send"}
+            {loading
+              ? "..."
+              : "Send"}
           </button>
 
         </div>
 
         <p className="mt-2 text-center text-xs text-slate-500">
-          Dev AI can make mistakes. Verify important information.
+          Dev AI can make mistakes.
+          Verify important
+          information.
         </p>
 
       </div>

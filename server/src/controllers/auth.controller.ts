@@ -187,3 +187,107 @@ export const getMe = async (
     });
   }
 };
+
+// =====================================================
+// UPDATE PROFILE
+// =====================================================
+
+export const updateProfile = async (
+  req: any,
+  res: Response
+): Promise<void> => {
+  try {
+    const userId = req.user?.userId;
+
+    if (!userId) {
+      res.status(401).json({
+        success: false,
+        message: "Unauthorized",
+      });
+      return;
+    }
+
+    const { name, avatar } = req.body;
+
+    // ================================================
+    // VALIDATE NAME
+    // ================================================
+
+    if (
+      name !== undefined &&
+      (typeof name !== "string" ||
+        name.trim().length < 2 ||
+        name.trim().length > 50)
+    ) {
+      res.status(400).json({
+        success: false,
+        message: "Name must be between 2 and 50 characters",
+      });
+      return;
+    }
+
+    // ================================================
+    // VALIDATE AVATAR
+    // ================================================
+
+    if (
+      avatar !== undefined &&
+      typeof avatar !== "string"
+    ) {
+      res.status(400).json({
+        success: false,
+        message: "Avatar must be a valid string",
+      });
+      return;
+    }
+
+    // ================================================
+    // FIND USER
+    // ================================================
+
+    const user = await User.findById(userId);
+
+    if (!user) {
+      res.status(404).json({
+        success: false,
+        message: "User not found",
+      });
+      return;
+    }
+
+    // ================================================
+    // UPDATE FIELDS
+    // ================================================
+
+    if (name !== undefined) {
+      user.name = name.trim();
+    }
+
+    if (avatar !== undefined) {
+      user.avatar = avatar.trim();
+    }
+
+    await user.save();
+
+    // ================================================
+    // REMOVE PASSWORD FROM RESPONSE
+    // ================================================
+
+    const updatedUser = await User.findById(userId).select(
+      "-password"
+    );
+
+    res.status(200).json({
+      success: true,
+      message: "Profile updated successfully",
+      user: updatedUser,
+    });
+  } catch (error) {
+    console.error("Update Profile Error:", error);
+
+    res.status(500).json({
+      success: false,
+      message: "Something went wrong while updating profile",
+    });
+  }
+};
