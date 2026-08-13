@@ -4,6 +4,7 @@ import cors from "cors";
 import authRoutes from "./routes/auth.routes";
 import aiRoutes from "./routes/ai.routes";
 import historyRoutes from "./routes/history.routes";
+import noteRoutes from "./routes/note.routes";
 
 const app = express();
 
@@ -20,5 +21,6 @@ app.get("/", (req, res) => {
 app.use("/api/auth", authRoutes);
 app.use("/api/ai", aiRoutes);
 app.use("/api/history", historyRoutes);
+app.use("/api/notes", noteRoutes);
 
 export default app;

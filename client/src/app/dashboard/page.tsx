@@ -14,6 +14,7 @@ import {
   Code2,
   Terminal,
   Zap,
+  StickyNote,
 } from "lucide-react";
 
 export default function Dashboard() {
@@ -55,6 +56,10 @@ export default function Dashboard() {
 
   const goToPrompts = () => {
     router.push("/prompts");
+  };
+
+  const goToNotes = () => {
+    router.push("/notes");
   };
 
   const goToProfile = () => {
@@ -115,20 +120,35 @@ export default function Dashboard() {
           </button>
 
           {/* Right Side */}
-          <div className="flex items-center gap-3">
+          <div className="flex items-center gap-2 sm:gap-3">
             {/* New Chat */}
             <button
               onClick={goToChat}
               className="hidden rounded-xl border border-violet-500/20 bg-violet-500/10 px-4 py-2 text-sm font-medium text-violet-300 transition hover:border-violet-500/40 hover:bg-violet-500/20 sm:flex sm:items-center sm:gap-2"
             >
               <MessageSquare className="h-4 w-4" />
+
               New Chat
+            </button>
+
+            {/* Profile */}
+            <button
+              onClick={goToProfile}
+              title="My Profile"
+              className="flex items-center gap-2 rounded-xl border border-white/10 bg-white/5 px-3 py-2 text-sm text-slate-300 transition hover:border-violet-500/30 hover:bg-violet-500/10 hover:text-violet-300 sm:px-4"
+            >
+              <User className="h-4 w-4" />
+
+              <span className="hidden sm:inline">
+                Profile
+              </span>
             </button>
 
             {/* Logout */}
             <button
               onClick={handleLogout}
-              className="flex items-center gap-2 rounded-xl border border-white/10 bg-white/5 px-4 py-2 text-sm text-slate-300 transition hover:border-red-500/30 hover:bg-red-500/10 hover:text-red-300"
+              title="Logout"
+              className="flex items-center gap-2 rounded-xl border border-white/10 bg-white/5 px-3 py-2 text-sm text-slate-300 transition hover:border-red-500/30 hover:bg-red-500/10 hover:text-red-300 sm:px-4"
             >
               <LogOut className="h-4 w-4" />
 
@@ -344,26 +364,26 @@ export default function Dashboard() {
             </button>
 
             {/* =========================
-                My Profile
+                Notes
             ========================= */}
             <button
-              onClick={goToProfile}
-              className="group rounded-2xl border border-white/10 bg-white/5 p-6 text-left transition hover:-translate-y-1 hover:border-emerald-500/40 hover:bg-emerald-500/5"
+              onClick={goToNotes}
+              className="group rounded-2xl border border-white/10 bg-white/5 p-6 text-left transition hover:-translate-y-1 hover:border-amber-500/40 hover:bg-amber-500/5"
             >
-              <div className="flex h-12 w-12 items-center justify-center rounded-xl bg-emerald-500/10">
-                <User className="h-6 w-6 text-emerald-400" />
+              <div className="flex h-12 w-12 items-center justify-center rounded-xl bg-amber-500/10">
+                <StickyNote className="h-6 w-6 text-amber-400" />
               </div>
 
               <h4 className="mt-5 text-lg font-semibold">
-                My Profile
+                My Notes
               </h4>
 
               <p className="mt-2 text-sm leading-6 text-slate-500">
-                Manage your account and preferences.
+                Create, edit, pin and manage your developer notes.
               </p>
 
-              <div className="mt-5 flex items-center gap-2 text-sm font-medium text-emerald-400">
-                Open Profile
+              <div className="mt-5 flex items-center gap-2 text-sm font-medium text-amber-400">
+                Open Notes
 
                 <ArrowRight className="h-4 w-4 transition group-hover:translate-x-1" />
               </div>
