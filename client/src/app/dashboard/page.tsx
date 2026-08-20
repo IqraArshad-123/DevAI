@@ -15,6 +15,7 @@ import {
   Terminal,
   Zap,
   StickyNote,
+  Settings,
 } from "lucide-react";
 
 export default function Dashboard() {
@@ -24,6 +25,7 @@ export default function Dashboard() {
   // =========================
   // Authentication Check
   // =========================
+
   useEffect(() => {
     const token = localStorage.getItem("token");
 
@@ -38,6 +40,7 @@ export default function Dashboard() {
   // =========================
   // Logout
   // =========================
+
   const handleLogout = () => {
     localStorage.removeItem("token");
     router.replace("/auth/login");
@@ -46,6 +49,7 @@ export default function Dashboard() {
   // =========================
   // Navigation
   // =========================
+
   const goToChat = () => {
     router.push("/chat");
   };
@@ -66,9 +70,14 @@ export default function Dashboard() {
     router.push("/profile");
   };
 
+  const goToSettings = () => {
+    router.push("/settings");
+  };
+
   // =========================
   // Loading
   // =========================
+
   if (checkingAuth) {
     return (
       <main className="flex min-h-screen items-center justify-center bg-[#050816] text-white">
@@ -90,6 +99,7 @@ export default function Dashboard() {
       {/* =========================
           Background Glow
       ========================= */}
+
       <div className="pointer-events-none fixed left-0 top-0 h-96 w-96 rounded-full bg-violet-600/10 blur-[140px]" />
 
       <div className="pointer-events-none fixed bottom-0 right-0 h-96 w-96 rounded-full bg-blue-600/10 blur-[140px]" />
@@ -97,9 +107,12 @@ export default function Dashboard() {
       {/* =========================
           Navbar
       ========================= */}
+
       <header className="sticky top-0 z-50 border-b border-white/10 bg-[#050816]/80 backdrop-blur-xl">
         <div className="mx-auto flex max-w-7xl items-center justify-between px-6 py-4">
+
           {/* Logo */}
+
           <button
             onClick={() => router.push("/dashboard")}
             className="flex items-center gap-3"
@@ -120,8 +133,11 @@ export default function Dashboard() {
           </button>
 
           {/* Right Side */}
+
           <div className="flex items-center gap-2 sm:gap-3">
+
             {/* New Chat */}
+
             <button
               onClick={goToChat}
               className="hidden rounded-xl border border-violet-500/20 bg-violet-500/10 px-4 py-2 text-sm font-medium text-violet-300 transition hover:border-violet-500/40 hover:bg-violet-500/20 sm:flex sm:items-center sm:gap-2"
@@ -132,6 +148,7 @@ export default function Dashboard() {
             </button>
 
             {/* Profile */}
+
             <button
               onClick={goToProfile}
               title="My Profile"
@@ -145,6 +162,7 @@ export default function Dashboard() {
             </button>
 
             {/* Logout */}
+
             <button
               onClick={handleLogout}
               title="Logout"
@@ -156,6 +174,7 @@ export default function Dashboard() {
                 Logout
               </span>
             </button>
+
           </div>
         </div>
       </header>
@@ -163,15 +182,22 @@ export default function Dashboard() {
       {/* =========================
           Main Content
       ========================= */}
+
       <section className="relative mx-auto max-w-7xl px-6 py-10">
+
         {/* =========================
             Welcome Section
         ========================= */}
+
         <div className="rounded-3xl border border-white/10 bg-linear-to-br from-violet-600/10 via-[#0b1025] to-blue-600/5 p-8 shadow-2xl shadow-black/20">
+
           <div className="flex flex-col justify-between gap-8 lg:flex-row lg:items-center">
+
             <div>
+
               <div className="mb-4 inline-flex items-center gap-2 rounded-full border border-violet-500/20 bg-violet-500/10 px-4 py-2 text-sm text-violet-300">
                 <Sparkles className="h-4 w-4" />
+
                 Dev AI Workspace
               </div>
 
@@ -180,12 +206,15 @@ export default function Dashboard() {
               </h2>
 
               <p className="mt-3 max-w-2xl text-base leading-7 text-slate-400">
-                Your AI-powered developer workspace is ready. Ask questions,
-                debug code, learn new technologies and build faster.
+                Your AI-powered developer workspace is ready.
+                Ask questions, debug code, learn new technologies
+                and build faster.
               </p>
+
             </div>
 
             {/* Start New Chat */}
+
             <button
               onClick={goToChat}
               className="group flex shrink-0 items-center justify-center gap-3 rounded-2xl bg-linear-to-r from-violet-600 to-purple-600 px-6 py-4 font-semibold text-white shadow-xl shadow-violet-900/30 transition hover:scale-[1.02] hover:from-violet-500 hover:to-purple-500"
@@ -196,16 +225,23 @@ export default function Dashboard() {
 
               <ArrowRight className="h-5 w-5 transition group-hover:translate-x-1" />
             </button>
+
           </div>
+
         </div>
 
         {/* =========================
             Stats
         ========================= */}
+
         <div className="mt-8 grid gap-4 sm:grid-cols-2 lg:grid-cols-4">
+
           {/* AI Chat */}
+
           <div className="rounded-2xl border border-white/10 bg-white/5 p-5">
+
             <div className="flex items-center justify-between">
+
               <div className="rounded-xl bg-violet-500/10 p-3">
                 <MessageSquare className="h-5 w-5 text-violet-400" />
               </div>
@@ -213,6 +249,7 @@ export default function Dashboard() {
               <span className="text-xs text-emerald-400">
                 Active
               </span>
+
             </div>
 
             <p className="mt-5 text-2xl font-bold">
@@ -222,10 +259,13 @@ export default function Dashboard() {
             <p className="mt-1 text-sm text-slate-500">
               Ready to assist
             </p>
+
           </div>
 
           {/* Code Help */}
+
           <div className="rounded-2xl border border-white/10 bg-white/5 p-5">
+
             <div className="w-fit rounded-xl bg-blue-500/10 p-3">
               <Code2 className="h-5 w-5 text-blue-400" />
             </div>
@@ -237,10 +277,13 @@ export default function Dashboard() {
             <p className="mt-1 text-sm text-slate-500">
               Generate & debug
             </p>
+
           </div>
 
           {/* Developer */}
+
           <div className="rounded-2xl border border-white/10 bg-white/5 p-5">
+
             <div className="w-fit rounded-xl bg-fuchsia-500/10 p-3">
               <Terminal className="h-5 w-5 text-fuchsia-400" />
             </div>
@@ -252,10 +295,13 @@ export default function Dashboard() {
             <p className="mt-1 text-sm text-slate-500">
               Productivity tools
             </p>
+
           </div>
 
           {/* Availability */}
+
           <div className="rounded-2xl border border-white/10 bg-white/5 p-5">
+
             <div className="w-fit rounded-xl bg-emerald-500/10 p-3">
               <Zap className="h-5 w-5 text-emerald-400" />
             </div>
@@ -267,13 +313,17 @@ export default function Dashboard() {
             <p className="mt-1 text-sm text-slate-500">
               AI availability
             </p>
+
           </div>
+
         </div>
 
         {/* =========================
             Quick Actions
         ========================= */}
+
         <div className="mt-10">
+
           <div className="mb-5">
             <h3 className="text-2xl font-bold">
               Quick Actions
@@ -284,10 +334,14 @@ export default function Dashboard() {
             </p>
           </div>
 
-          <div className="grid gap-5 sm:grid-cols-2 lg:grid-cols-4">
+          {/* 6 Navigation Cards */}
+
+          <div className="grid gap-5 sm:grid-cols-2 lg:grid-cols-3">
+
             {/* =========================
                 New Chat
             ========================= */}
+
             <button
               onClick={goToChat}
               className="group rounded-2xl border border-white/10 bg-white/5 p-6 text-left transition hover:-translate-y-1 hover:border-violet-500/40 hover:bg-violet-500/5"
@@ -314,6 +368,7 @@ export default function Dashboard() {
             {/* =========================
                 Chat History
             ========================= */}
+
             <button
               onClick={goToHistory}
               className="group rounded-2xl border border-white/10 bg-white/5 p-6 text-left transition hover:-translate-y-1 hover:border-blue-500/40 hover:bg-blue-500/5"
@@ -340,6 +395,7 @@ export default function Dashboard() {
             {/* =========================
                 Saved Prompts
             ========================= */}
+
             <button
               onClick={goToPrompts}
               className="group rounded-2xl border border-white/10 bg-white/5 p-6 text-left transition hover:-translate-y-1 hover:border-fuchsia-500/40 hover:bg-fuchsia-500/5"
@@ -366,6 +422,7 @@ export default function Dashboard() {
             {/* =========================
                 Notes
             ========================= */}
+
             <button
               onClick={goToNotes}
               className="group rounded-2xl border border-white/10 bg-white/5 p-6 text-left transition hover:-translate-y-1 hover:border-amber-500/40 hover:bg-amber-500/5"
@@ -388,20 +445,80 @@ export default function Dashboard() {
                 <ArrowRight className="h-4 w-4 transition group-hover:translate-x-1" />
               </div>
             </button>
+
+            {/* =========================
+                Profile
+            ========================= */}
+
+            <button
+              onClick={goToProfile}
+              className="group rounded-2xl border border-white/10 bg-white/5 p-6 text-left transition hover:-translate-y-1 hover:border-cyan-500/40 hover:bg-cyan-500/5"
+            >
+              <div className="flex h-12 w-12 items-center justify-center rounded-xl bg-cyan-500/10">
+                <User className="h-6 w-6 text-cyan-400" />
+              </div>
+
+              <h4 className="mt-5 text-lg font-semibold">
+                My Profile
+              </h4>
+
+              <p className="mt-2 text-sm leading-6 text-slate-500">
+                View and manage your personal account information.
+              </p>
+
+              <div className="mt-5 flex items-center gap-2 text-sm font-medium text-cyan-400">
+                Open Profile
+
+                <ArrowRight className="h-4 w-4 transition group-hover:translate-x-1" />
+              </div>
+            </button>
+
+            {/* =========================
+                Settings
+            ========================= */}
+
+            <button
+              onClick={goToSettings}
+              className="group rounded-2xl border border-white/10 bg-white/5 p-6 text-left transition hover:-translate-y-1 hover:border-emerald-500/40 hover:bg-emerald-500/5"
+            >
+              <div className="flex h-12 w-12 items-center justify-center rounded-xl bg-emerald-500/10">
+                <Settings className="h-6 w-6 text-emerald-400" />
+              </div>
+
+              <h4 className="mt-5 text-lg font-semibold">
+                Settings
+              </h4>
+
+              <p className="mt-2 text-sm leading-6 text-slate-500">
+                Customize your Dev AI workspace and preferences.
+              </p>
+
+              <div className="mt-5 flex items-center gap-2 text-sm font-medium text-emerald-400">
+                Open Settings
+
+                <ArrowRight className="h-4 w-4 transition group-hover:translate-x-1" />
+              </div>
+            </button>
+
           </div>
         </div>
 
         {/* =========================
             Developer Assistant
         ========================= */}
+
         <div className="mt-10 overflow-hidden rounded-3xl border border-violet-500/10 bg-linear-to-r from-violet-600/10 via-white/5 to-blue-500/10 p-8">
+
           <div className="flex flex-col items-start justify-between gap-6 md:flex-row md:items-center">
+
             <div className="flex items-start gap-4">
+
               <div className="flex h-14 w-14 shrink-0 items-center justify-center rounded-2xl bg-violet-600/20">
                 <Bot className="h-7 w-7 text-violet-400" />
               </div>
 
               <div>
+
                 <h3 className="text-xl font-bold">
                   Your AI Coding Companion
                 </h3>
@@ -410,7 +527,9 @@ export default function Dashboard() {
                   Need help with an error, a new concept, or some code?
                   Dev AI is ready whenever you are.
                 </p>
+
               </div>
+
             </div>
 
             <button
@@ -421,16 +540,21 @@ export default function Dashboard() {
 
               <ArrowRight className="h-4 w-4" />
             </button>
+
           </div>
+
         </div>
+
       </section>
 
       {/* =========================
           Footer
       ========================= */}
+
       <footer className="border-t border-white/10 py-6 text-center text-sm text-slate-600">
         Dev AI • AI Powered Coding Assistant
       </footer>
+
     </main>
   );
 }
