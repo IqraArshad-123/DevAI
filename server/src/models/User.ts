@@ -1,17 +1,34 @@
 import mongoose, { Document, Schema } from "mongoose";
 
+export type UserTheme = "dark" | "light" | "system";
+export type ResponseStyle =
+  | "concise"
+  | "balanced"
+  | "detailed";
+
 export interface IUser extends Document {
   name: string;
   email: string;
   password: string;
   avatar?: string;
   plan: "free" | "pro";
+
+  // SETTINGS
+  theme: UserTheme;
+  notifications: boolean;
+  autoSave: boolean;
+  responseStyle: ResponseStyle;
+
   createdAt: Date;
   updatedAt: Date;
 }
 
 const userSchema = new Schema<IUser>(
   {
+    // =====================================================
+    // BASIC PROFILE
+    // =====================================================
+
     name: {
       type: String,
       required: true,
@@ -43,6 +60,32 @@ const userSchema = new Schema<IUser>(
       type: String,
       enum: ["free", "pro"],
       default: "free",
+    },
+
+    // =====================================================
+    // SETTINGS
+    // =====================================================
+
+    theme: {
+      type: String,
+      enum: ["dark", "light", "system"],
+      default: "dark",
+    },
+
+    notifications: {
+      type: Boolean,
+      default: true,
+    },
+
+    autoSave: {
+      type: Boolean,
+      default: true,
+    },
+
+    responseStyle: {
+      type: String,
+      enum: ["concise", "balanced", "detailed"],
+      default: "balanced",
     },
   },
   {

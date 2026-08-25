@@ -117,13 +117,31 @@
   --sidebar-ring: oklch(0.556 0 0);
 }
 
+/* =====================================================
+   LIGHT THEME
+===================================================== */
+
+.light {
+  color-scheme: light;
+}
+
+/* =====================================================
+   BASE
+===================================================== */
+
 @layer base {
   * {
     @apply border-border outline-ring/50;
   }
+
   body {
     @apply bg-background text-foreground;
+
+    transition:
+      background-color 0.3s ease,
+      color 0.3s ease;
   }
+
   html {
     @apply font-sans;
   }

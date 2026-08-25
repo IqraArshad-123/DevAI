@@ -1,6 +1,46 @@
 import { Request, Response } from "express";
 import { askAI, streamAI } from "../services/ai.service";
 import Conversation from "../models/Conversation";
+import User from "../models/User";
+
+// =====================================================
+// BUILD AI MESSAGE WITH USER PREFERENCE
+// =====================================================
+
+const buildAIMessage = (
+  message: string,
+  responseStyle:
+    | "concise"
+    | "balanced"
+    | "detailed"
+): string => {
+  let instruction = "";
+
+  if (responseStyle === "concise") {
+    instruction =
+      "Give a concise and direct answer. Avoid unnecessary explanation.";
+  }
+
+  if (responseStyle === "balanced") {
+    instruction =
+      "Give a balanced answer with enough explanation to be useful, but avoid unnecessary length.";
+  }
+
+  if (responseStyle === "detailed") {
+    instruction =
+      "Give a detailed and comprehensive answer. Explain important reasoning, steps, examples, and edge cases when useful.";
+  }
+
+  return `
+You are Dev AI, a developer-focused AI assistant.
+
+Response style instruction:
+${instruction}
+
+User message:
+${message}
+`;
+};
 
 // =====================================================
 // SEND MESSAGE TO AI
@@ -40,20 +80,43 @@ export const chatWithAI = async (
     }
 
     // =================================================
+    // GET USER PREFERENCE
+    // =================================================
+
+    const user = await User.findById(userId);
+
+    if (!user) {
+      res.status(404).json({
+        success: false,
+        message: "User not found",
+      });
+      return;
+    }
+
+    const responseStyle =
+      (user as any).responseStyle || "balanced";
+
+    const aiMessage = buildAIMessage(
+      message,
+      responseStyle
+    );
+
+    // =================================================
     // GET AI RESPONSE
     // =================================================
 
-    const answer = await askAI(message);
+    const answer = await askAI(aiMessage);
 
     // =================================================
     // EXISTING CONVERSATION
     // =================================================
 
     if (conversationId) {
-      const conversation = await Conversation.findOne({
-        _id: conversationId,
-        user: userId,
-      });
+      const conversation =
+        await Conversation.findOne({
+          _id: conversationId,
+          user: userId,
+        });
 
       if (!conversation) {
         res.status(404).json({
@@ -63,14 +126,14 @@ export const chatWithAI = async (
         return;
       }
 
-      // Add user message
+      // Add original user message
       conversation.messages.push({
         role: "user",
         content: message,
         createdAt: new Date(),
       });
 
-      // Add AI message
+      // Add AI response
       conversation.messages.push({
         role: "assistant",
         content: answer,
@@ -81,7 +144,8 @@ export const chatWithAI = async (
 
       res.status(200).json({
         success: true,
-        message: "AI response generated successfully",
+        message:
+          "AI response generated successfully",
         answer,
         conversationId: conversation._id,
       });
@@ -98,26 +162,28 @@ export const chatWithAI = async (
         ? `${message.substring(0, 50)}...`
         : message;
 
-    const conversation = await Conversation.create({
-      user: userId,
-      title,
-      messages: [
-        {
-          role: "user",
-          content: message,
-          createdAt: new Date(),
-        },
-        {
-          role: "assistant",
-          content: answer,
-          createdAt: new Date(),
-        },
-      ],
-    });
+    const conversation =
+      await Conversation.create({
+        user: userId,
+        title,
+        messages: [
+          {
+            role: "user",
+            content: message,
+            createdAt: new Date(),
+          },
+          {
+            role: "assistant",
+            content: answer,
+            createdAt: new Date(),
+          },
+        ],
+      });
 
     res.status(200).json({
       success: true,
-      message: "AI response generated successfully",
+      message:
+        "AI response generated successfully",
       answer,
       conversationId: conversation._id,
     });
@@ -170,16 +236,39 @@ export const streamChatWithAI = async (
     }
 
     // =================================================
+    // GET USER PREFERENCE
+    // =================================================
+
+    const user = await User.findById(userId);
+
+    if (!user) {
+      res.status(404).json({
+        success: false,
+        message: "User not found",
+      });
+      return;
+    }
+
+    const responseStyle =
+      (user as any).responseStyle || "balanced";
+
+    const aiMessage = buildAIMessage(
+      message,
+      responseStyle
+    );
+
+    // =================================================
     // EXISTING CONVERSATION CHECK
     // =================================================
 
     let conversation = null;
 
     if (conversationId) {
-      conversation = await Conversation.findOne({
-        _id: conversationId,
-        user: userId,
-      });
+      conversation =
+        await Conversation.findOne({
+          _id: conversationId,
+          user: userId,
+        });
 
       if (!conversation) {
         res.status(404).json({
@@ -194,9 +283,20 @@ export const streamChatWithAI = async (
     // SSE HEADERS
     // =================================================
 
-    res.setHeader("Content-Type", "text/event-stream");
-    res.setHeader("Cache-Control", "no-cache");
-    res.setHeader("Connection", "keep-alive");
+    res.setHeader(
+      "Content-Type",
+      "text/event-stream"
+    );
+
+    res.setHeader(
+      "Cache-Control",
+      "no-cache"
+    );
+
+    res.setHeader(
+      "Connection",
+      "keep-alive"
+    );
 
     res.flushHeaders();
 
@@ -220,7 +320,7 @@ export const streamChatWithAI = async (
     // STREAM GEMINI RESPONSE
     // =================================================
 
-    await streamAI(message, (chunk) => {
+    await streamAI(aiMessage, (chunk) => {
       fullAnswer += chunk;
 
       res.write(
@@ -253,10 +353,12 @@ export const streamChatWithAI = async (
       await conversation.save();
 
       // Tell frontend conversation is complete
+
       res.write(
         `data: ${JSON.stringify({
           type: "done",
-          conversationId: conversation._id,
+          conversationId:
+            conversation._id,
         })}\n\n`
       );
     } else {
@@ -269,27 +371,29 @@ export const streamChatWithAI = async (
           ? `${message.substring(0, 50)}...`
           : message;
 
-      const newConversation = await Conversation.create({
-        user: userId,
-        title,
-        messages: [
-          {
-            role: "user",
-            content: message,
-            createdAt: new Date(),
-          },
-          {
-            role: "assistant",
-            content: fullAnswer,
-            createdAt: new Date(),
-          },
-        ],
-      });
+      const newConversation =
+        await Conversation.create({
+          user: userId,
+          title,
+          messages: [
+            {
+              role: "user",
+              content: message,
+              createdAt: new Date(),
+            },
+            {
+              role: "assistant",
+              content: fullAnswer,
+              createdAt: new Date(),
+            },
+          ],
+        });
 
       res.write(
         `data: ${JSON.stringify({
           type: "done",
-          conversationId: newConversation._id,
+          conversationId:
+            newConversation._id,
         })}\n\n`
       );
     }
@@ -306,7 +410,10 @@ export const streamChatWithAI = async (
 
     res.end();
   } catch (error) {
-    console.error("Streaming AI Error:", error);
+    console.error(
+      "Streaming AI Error:",
+      error
+    );
 
     // Agar stream start ho chuka hai
     // to JSON response nahi bhej sakte.
@@ -343,7 +450,8 @@ export const getConversations = async (
   res: Response
 ): Promise<void> => {
   try {
-    const userId = (req as any).user?.userId;
+    const userId =
+      (req as any).user?.userId;
 
     if (!userId) {
       res.status(401).json({
@@ -353,11 +461,14 @@ export const getConversations = async (
       return;
     }
 
-    const conversations = await Conversation.find({
-      user: userId,
-    })
-      .sort({ updatedAt: -1 })
-      .select("title messages createdAt updatedAt");
+    const conversations =
+      await Conversation.find({
+        user: userId,
+      })
+        .sort({ updatedAt: -1 })
+        .select(
+          "title messages createdAt updatedAt"
+        );
 
     res.status(200).json({
       success: true,
@@ -386,7 +497,9 @@ export const getConversation = async (
   res: Response
 ): Promise<void> => {
   try {
-    const userId = (req as any).user?.userId;
+    const userId =
+      (req as any).user?.userId;
+
     const { id } = req.params;
 
     if (!userId) {
@@ -397,10 +510,11 @@ export const getConversation = async (
       return;
     }
 
-    const conversation = await Conversation.findOne({
-      _id: id,
-      user: userId,
-    });
+    const conversation =
+      await Conversation.findOne({
+        _id: id,
+        user: userId,
+      });
 
     if (!conversation) {
       res.status(404).json({
@@ -437,7 +551,9 @@ export const deleteConversation = async (
   res: Response
 ): Promise<void> => {
   try {
-    const userId = (req as any).user?.userId;
+    const userId =
+      (req as any).user?.userId;
+
     const { id } = req.params;
 
     if (!userId) {
@@ -464,7 +580,8 @@ export const deleteConversation = async (
 
     res.status(200).json({
       success: true,
-      message: "Conversation deleted successfully",
+      message:
+        "Conversation deleted successfully",
     });
   } catch (error) {
     console.error(
@@ -489,7 +606,8 @@ export const regenerateMessage = async (
   res: Response
 ): Promise<void> => {
   try {
-    const { conversationId } = req.body;
+    const { conversationId } =
+      req.body;
 
     // =================================================
     // CHECK CONVERSATION ID
@@ -498,7 +616,8 @@ export const regenerateMessage = async (
     if (!conversationId) {
       res.status(400).json({
         success: false,
-        message: "Conversation ID is required",
+        message:
+          "Conversation ID is required",
       });
       return;
     }
@@ -507,7 +626,8 @@ export const regenerateMessage = async (
     // GET LOGGED-IN USER
     // =================================================
 
-    const userId = (req as any).user?.userId;
+    const userId =
+      (req as any).user?.userId;
 
     if (!userId) {
       res.status(401).json({
@@ -518,13 +638,33 @@ export const regenerateMessage = async (
     }
 
     // =================================================
+    // FIND USER
+    // =================================================
+
+    const user =
+      await User.findById(userId);
+
+    if (!user) {
+      res.status(404).json({
+        success: false,
+        message: "User not found",
+      });
+      return;
+    }
+
+    const responseStyle =
+      (user as any).responseStyle ||
+      "balanced";
+
+    // =================================================
     // FIND CONVERSATION
     // =================================================
 
-    const conversation = await Conversation.findOne({
-      _id: conversationId,
-      user: userId,
-    });
+    const conversation =
+      await Conversation.findOne({
+        _id: conversationId,
+        user: userId,
+      });
 
     if (!conversation) {
       res.status(404).json({
@@ -546,13 +686,16 @@ export const regenerateMessage = async (
     if (lastUserMessageIndex === -1) {
       res.status(400).json({
         success: false,
-        message: "No user message found to regenerate",
+        message:
+          "No user message found to regenerate",
       });
       return;
     }
 
     const lastUserMessage =
-      conversation.messages[lastUserMessageIndex];
+      conversation.messages[
+        lastUserMessageIndex
+      ];
 
     // =================================================
     // REMOVE OLD AI RESPONSE
@@ -565,12 +708,21 @@ export const regenerateMessage = async (
       ) as typeof conversation.messages;
 
     // =================================================
+    // BUILD AI MESSAGE
+    // =================================================
+
+    const aiMessage =
+      buildAIMessage(
+        lastUserMessage.content,
+        responseStyle
+      );
+
+    // =================================================
     // GENERATE NEW AI RESPONSE
     // =================================================
 
-    const answer = await askAI(
-      lastUserMessage.content
-    );
+    const answer =
+      await askAI(aiMessage);
 
     // =================================================
     // ADD NEW AI RESPONSE
@@ -590,9 +742,11 @@ export const regenerateMessage = async (
 
     res.status(200).json({
       success: true,
-      message: "Response regenerated successfully",
+      message:
+        "Response regenerated successfully",
       answer,
-      conversationId: conversation._id,
+      conversationId:
+        conversation._id,
     });
   } catch (error) {
     console.error(
@@ -607,7 +761,6 @@ export const regenerateMessage = async (
     });
   }
 };
-
 
 // =====================================================
 // EDIT USER MESSAGE
@@ -631,7 +784,8 @@ export const editMessage = async (
     if (!conversationId) {
       res.status(400).json({
         success: false,
-        message: "Conversation ID is required",
+        message:
+          "Conversation ID is required",
       });
       return;
     }
@@ -639,7 +793,8 @@ export const editMessage = async (
     if (!messageId) {
       res.status(400).json({
         success: false,
-        message: "Message ID is required",
+        message:
+          "Message ID is required",
       });
       return;
     }
@@ -660,7 +815,8 @@ export const editMessage = async (
     // GET LOGGED-IN USER
     // =================================================
 
-    const userId = (req as any).user?.userId;
+    const userId =
+      (req as any).user?.userId;
 
     if (!userId) {
       res.status(401).json({
@@ -671,18 +827,39 @@ export const editMessage = async (
     }
 
     // =================================================
+    // FIND USER
+    // =================================================
+
+    const user =
+      await User.findById(userId);
+
+    if (!user) {
+      res.status(404).json({
+        success: false,
+        message: "User not found",
+      });
+      return;
+    }
+
+    const responseStyle =
+      (user as any).responseStyle ||
+      "balanced";
+
+    // =================================================
     // FIND CONVERSATION
     // =================================================
 
-    const conversation = await Conversation.findOne({
-      _id: conversationId,
-      user: userId,
-    });
+    const conversation =
+      await Conversation.findOne({
+        _id: conversationId,
+        user: userId,
+      });
 
     if (!conversation) {
       res.status(404).json({
         success: false,
-        message: "Conversation not found",
+        message:
+          "Conversation not found",
       });
       return;
     }
@@ -692,22 +869,33 @@ export const editMessage = async (
     // =================================================
 
     const messageIndex =
-  conversation.messages.findIndex(
-    (msg) =>
-      msg._id?.toString() === messageId
-  );
+      conversation.messages.findIndex(
+        (msg) =>
+          msg._id?.toString() ===
+          messageId
+      );
+
+    if (messageIndex === -1) {
+      res.status(404).json({
+        success: false,
+        message: "Message not found",
+      });
+      return;
+    }
 
     // =================================================
     // ONLY USER MESSAGE CAN BE EDITED
     // =================================================
 
     if (
-      conversation.messages[messageIndex].role !==
-      "user"
+      conversation.messages[
+        messageIndex
+      ].role !== "user"
     ) {
       res.status(400).json({
         success: false,
-        message: "Only user messages can be edited",
+        message:
+          "Only user messages can be edited",
       });
       return;
     }
@@ -716,13 +904,16 @@ export const editMessage = async (
     // UPDATE USER MESSAGE
     // =================================================
 
-    const updatedMessage = message.trim();
+    const updatedMessage =
+      message.trim();
 
-    conversation.messages[messageIndex].content =
-      updatedMessage;
+    conversation.messages[
+      messageIndex
+    ].content = updatedMessage;
 
-    conversation.messages[messageIndex].createdAt =
-      new Date();
+    conversation.messages[
+      messageIndex
+    ].createdAt = new Date();
 
     // =================================================
     // REMOVE EVERYTHING AFTER EDITED MESSAGE
@@ -735,12 +926,21 @@ export const editMessage = async (
       ) as typeof conversation.messages;
 
     // =================================================
+    // BUILD AI MESSAGE
+    // =================================================
+
+    const aiMessage =
+      buildAIMessage(
+        updatedMessage,
+        responseStyle
+      );
+
+    // =================================================
     // GENERATE NEW AI RESPONSE
     // =================================================
 
-    const answer = await askAI(
-      updatedMessage
-    );
+    const answer =
+      await askAI(aiMessage);
 
     // =================================================
     // ADD NEW AI RESPONSE
@@ -759,7 +959,10 @@ export const editMessage = async (
     if (messageIndex === 0) {
       conversation.title =
         updatedMessage.length > 50
-          ? `${updatedMessage.substring(0, 50)}...`
+          ? `${updatedMessage.substring(
+              0,
+              50
+            )}...`
           : updatedMessage;
     }
 
@@ -771,11 +974,12 @@ export const editMessage = async (
 
     res.status(200).json({
       success: true,
-      message: "Message edited successfully",
+      message:
+        "Message edited successfully",
       answer,
-      conversationId: conversation._id,
-      conversation:
-        conversation,
+      conversationId:
+        conversation._id,
+      conversation,
     });
   } catch (error) {
     console.error(
