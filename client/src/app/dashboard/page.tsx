@@ -16,6 +16,7 @@ import {
   Zap,
   StickyNote,
   Settings,
+  Wrench,
 } from "lucide-react";
 
 export default function Dashboard() {
@@ -72,6 +73,10 @@ export default function Dashboard() {
 
   const goToSettings = () => {
     router.push("/settings");
+  };
+
+  const goToDeveloperTools = () => {
+    router.push("/developer-tools");
   };
 
   // =========================
@@ -334,7 +339,7 @@ export default function Dashboard() {
             </p>
           </div>
 
-          {/* 6 Navigation Cards */}
+          {/* Navigation Cards */}
 
           <div className="grid gap-5 sm:grid-cols-2 lg:grid-cols-3">
 
@@ -495,6 +500,33 @@ export default function Dashboard() {
 
               <div className="mt-5 flex items-center gap-2 text-sm font-medium text-emerald-400">
                 Open Settings
+
+                <ArrowRight className="h-4 w-4 transition group-hover:translate-x-1" />
+              </div>
+            </button>
+
+            {/* =========================
+                Developer Tools
+            ========================= */}
+
+            <button
+              onClick={goToDeveloperTools}
+              className="group rounded-2xl border border-white/10 bg-white/5 p-6 text-left transition hover:-translate-y-1 hover:border-orange-500/40 hover:bg-orange-500/5"
+            >
+              <div className="flex h-12 w-12 items-center justify-center rounded-xl bg-orange-500/10">
+                <Wrench className="h-6 w-6 text-orange-400" />
+              </div>
+
+              <h4 className="mt-5 text-lg font-semibold">
+                Developer Tools
+              </h4>
+
+              <p className="mt-2 text-sm leading-6 text-slate-500">
+                Format JSON, generate UUIDs, test regex, encode data and more.
+              </p>
+
+              <div className="mt-5 flex items-center gap-2 text-sm font-medium text-orange-400">
+                Open Developer Tools
 
                 <ArrowRight className="h-4 w-4 transition group-hover:translate-x-1" />
               </div>

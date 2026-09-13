@@ -1,7 +1,12 @@
 import { Request, Response } from "express";
+import { Types } from "mongoose";
 import { askAI, streamAI } from "../services/ai.service";
 import Conversation from "../models/Conversation";
 import User from "../models/User";
+
+const isValidObjectId = (id: unknown): id is string =>
+  typeof id === "string" && Types.ObjectId.isValid(id);
+
 
 // =====================================================
 // BUILD AI MESSAGE WITH USER PREFERENCE
@@ -57,10 +62,22 @@ export const chatWithAI = async (
     // CHECK MESSAGE
     // =================================================
 
-    if (!message || typeof message !== "string") {
+    if (
+      !message ||
+      typeof message !== "string" ||
+      !message.trim()
+    ) {
       res.status(400).json({
         success: false,
         message: "Message is required",
+      });
+      return;
+    }
+
+    if (message.length > 10000) {
+      res.status(400).json({
+        success: false,
+        message: "Message must not exceed 10,000 characters",
       });
       return;
     }
@@ -106,6 +123,15 @@ export const chatWithAI = async (
     // =================================================
 
     const answer = await askAI(aiMessage);
+
+    // =================================================
+    // VALIDATE CONVERSATION ID
+    // =================================================
+
+    if (conversationId && !isValidObjectId(conversationId)) {
+      res.status(400).json({ success: false, message: "Invalid conversation ID" });
+      return;
+    }
 
     // =================================================
     // EXISTING CONVERSATION
@@ -213,10 +239,22 @@ export const streamChatWithAI = async (
     // CHECK MESSAGE
     // =================================================
 
-    if (!message || typeof message !== "string") {
+    if (
+      !message ||
+      typeof message !== "string" ||
+      !message.trim()
+    ) {
       res.status(400).json({
         success: false,
         message: "Message is required",
+      });
+      return;
+    }
+
+    if (message.length > 10000) {
+      res.status(400).json({
+        success: false,
+        message: "Message must not exceed 10,000 characters",
       });
       return;
     }
@@ -256,6 +294,15 @@ export const streamChatWithAI = async (
       message,
       responseStyle
     );
+
+    // =================================================
+    // VALIDATE CONVERSATION ID
+    // =================================================
+
+    if (conversationId && !isValidObjectId(conversationId)) {
+      res.status(400).json({ success: false, message: "Invalid conversation ID" });
+      return;
+    }
 
     // =================================================
     // EXISTING CONVERSATION CHECK
@@ -333,7 +380,7 @@ export const streamChatWithAI = async (
 
     // =================================================
     // SAVE CONVERSATION
-    // =================================================
+    // =====================================================
 
     if (conversation) {
       // Existing conversation
@@ -510,6 +557,14 @@ export const getConversation = async (
       return;
     }
 
+    if (!isValidObjectId(id)) {
+      res.status(400).json({
+        success: false,
+        message: "Invalid conversation ID",
+      });
+      return;
+    }
+
     const conversation =
       await Conversation.findOne({
         _id: id,
@@ -561,6 +616,11 @@ export const deleteConversation = async (
         success: false,
         message: "Unauthorized",
       });
+      return;
+    }
+
+    if (!isValidObjectId(id)) {
+      res.status(400).json({ success: false, message: "Invalid conversation ID" });
       return;
     }
 
@@ -619,6 +679,11 @@ export const regenerateMessage = async (
         message:
           "Conversation ID is required",
       });
+      return;
+    }
+
+    if (!isValidObjectId(conversationId)) {
+      res.status(400).json({ success: false, message: "Invalid conversation ID" });
       return;
     }
 
@@ -799,6 +864,16 @@ export const editMessage = async (
       return;
     }
 
+    if (!isValidObjectId(conversationId)) {
+      res.status(400).json({ success: false, message: "Invalid conversation ID" });
+      return;
+    }
+
+    if (!isValidObjectId(messageId)) {
+      res.status(400).json({ success: false, message: "Invalid message ID" });
+      return;
+    }
+
     if (
       !message ||
       typeof message !== "string" ||
@@ -807,6 +882,14 @@ export const editMessage = async (
       res.status(400).json({
         success: false,
         message: "Message is required",
+      });
+      return;
+    }
+
+    if (message.length > 10000) {
+      res.status(400).json({
+        success: false,
+        message: "Message must not exceed 10,000 characters",
       });
       return;
     }

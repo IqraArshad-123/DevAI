@@ -8,6 +8,11 @@ export interface AuthRequest extends Request {
   };
 }
 
+interface JwtPayload {
+  userId: string;
+  email: string;
+}
+
 export const protect = (
   req: AuthRequest,
   res: Response,
@@ -24,7 +29,15 @@ export const protect = (
       return;
     }
 
-    const token = authHeader.split(" ")[1];
+    const token = authHeader.slice(7).trim();
+
+    if (!token) {
+      res.status(401).json({
+        success: false,
+        message: "Access denied. No token provided.",
+      });
+      return;
+    }
 
     const jwtSecret = process.env.JWT_SECRET;
 
@@ -36,12 +49,25 @@ export const protect = (
       return;
     }
 
-    const decoded = jwt.verify(token, jwtSecret) as {
-      userId: string;
-      email: string;
-    };
+    const decoded = jwt.verify(token, jwtSecret);
 
-    req.user = decoded;
+    if (
+      typeof decoded !== "object" ||
+      decoded === null ||
+      typeof (decoded as Partial<JwtPayload>).userId !== "string" ||
+      typeof (decoded as Partial<JwtPayload>).email !== "string"
+    ) {
+      res.status(401).json({
+        success: false,
+        message: "Invalid or expired token",
+      });
+      return;
+    }
+
+    req.user = {
+      userId: (decoded as JwtPayload).userId,
+      email: (decoded as JwtPayload).email,
+    };
 
     next();
   } catch (error) {

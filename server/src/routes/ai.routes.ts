@@ -9,7 +9,9 @@ import {
   regenerateMessage,
   editMessage,
 } from "../controllers/ai.controller";
+
 import { protect } from "../middleware/auth.middleware";
+import { aiRateLimiter } from "../middleware/rateLimit.middleware";
 
 const router = Router();
 
@@ -20,6 +22,7 @@ const router = Router();
 router.post(
   "/chat",
   protect,
+  aiRateLimiter,
   chatWithAI
 );
 
@@ -30,6 +33,7 @@ router.post(
 router.post(
   "/chat/stream",
   protect,
+  aiRateLimiter,
   streamChatWithAI
 );
 
@@ -70,6 +74,7 @@ router.delete(
 router.post(
   "/regenerate",
   protect,
+  aiRateLimiter,
   regenerateMessage
 );
 
@@ -80,8 +85,8 @@ router.post(
 router.post(
   "/edit-message",
   protect,
+  aiRateLimiter,
   editMessage
 );
-
 
 export default router;

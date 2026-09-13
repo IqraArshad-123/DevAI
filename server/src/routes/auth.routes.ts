@@ -10,6 +10,7 @@ import {
 } from "../controllers/auth.controller";
 
 import { protect } from "../middleware/auth.middleware";
+import { authRateLimiter } from "../middleware/rateLimit.middleware";
 
 const router = Router();
 
@@ -17,9 +18,9 @@ const router = Router();
 // AUTH
 // =====================================================
 
-router.post("/register", registerUser);
+router.post("/register", authRateLimiter, registerUser);
 
-router.post("/login", loginUser);
+router.post("/login", authRateLimiter, loginUser);
 
 // =====================================================
 // CURRENT USER
