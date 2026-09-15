@@ -236,91 +236,134 @@ export default function Dashboard() {
         </div>
 
         {/* =========================
-            Stats
+            Workspace Overview
         ========================= */}
 
-        <div className="mt-8 grid gap-4 sm:grid-cols-2 lg:grid-cols-4">
+        <div className="mt-8 rounded-3xl border border-white/10 bg-[#080d20]/80 p-6">
 
-          {/* AI Chat */}
+          <div className="mb-6 flex flex-col justify-between gap-2 sm:flex-row sm:items-center">
+            <div>
+              <h3 className="text-lg font-semibold">
+                Workspace Overview
+              </h3>
 
-          <div className="rounded-2xl border border-white/10 bg-white/5 p-5">
+              <p className="mt-1 text-sm text-slate-500">
+                Your current Dev AI capabilities.
+              </p>
+            </div>
 
-            <div className="flex items-center justify-between">
+            <span className="w-fit rounded-full border border-white/10 bg-white/3 px-3 py-1 text-xs text-slate-500">
+              Informational
+            </span>
+          </div>
 
-              <div className="rounded-xl bg-violet-500/10 p-3">
-                <MessageSquare className="h-5 w-5 text-violet-400" />
+          <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-4">
+
+            {/* AI Chat */}
+
+            <div className="border-l border-violet-500/30 pl-4">
+
+              <div className="flex items-center gap-3">
+                <div className="flex h-10 w-10 items-center justify-center rounded-lg bg-violet-500/10">
+                  <MessageSquare className="h-5 w-5 text-violet-400" />
+                </div>
+
+                <div>
+                  <p className="text-sm font-medium text-slate-400">
+                    AI Chat
+                  </p>
+
+                  <p className="mt-1 text-lg font-semibold text-white">
+                    Active
+                  </p>
+                </div>
               </div>
 
-              <span className="text-xs text-emerald-400">
-                Active
-              </span>
+              <p className="mt-3 text-xs text-slate-600">
+                Ready to assist
+              </p>
 
             </div>
 
-            <p className="mt-5 text-2xl font-bold">
-              AI Chat
-            </p>
+            {/* Code Help */}
 
-            <p className="mt-1 text-sm text-slate-500">
-              Ready to assist
-            </p>
+            <div className="border-l border-blue-500/30 pl-4">
 
-          </div>
+              <div className="flex items-center gap-3">
+                <div className="flex h-10 w-10 items-center justify-center rounded-lg bg-blue-500/10">
+                  <Code2 className="h-5 w-5 text-blue-400" />
+                </div>
 
-          {/* Code Help */}
+                <div>
+                  <p className="text-sm font-medium text-slate-400">
+                    Code Help
+                  </p>
 
-          <div className="rounded-2xl border border-white/10 bg-white/5 p-5">
+                  <p className="mt-1 text-lg font-semibold text-white">
+                    Generate & Debug
+                  </p>
+                </div>
+              </div>
 
-            <div className="w-fit rounded-xl bg-blue-500/10 p-3">
-              <Code2 className="h-5 w-5 text-blue-400" />
+              <p className="mt-3 text-xs text-slate-600">
+                Development assistance
+              </p>
+
             </div>
 
-            <p className="mt-5 text-2xl font-bold">
-              Code Help
-            </p>
+            {/* Developer */}
 
-            <p className="mt-1 text-sm text-slate-500">
-              Generate & debug
-            </p>
+            <div className="border-l border-fuchsia-500/30 pl-4">
 
-          </div>
+              <div className="flex items-center gap-3">
+                <div className="flex h-10 w-10 items-center justify-center rounded-lg bg-fuchsia-500/10">
+                  <Terminal className="h-5 w-5 text-fuchsia-400" />
+                </div>
 
-          {/* Developer */}
+                <div>
+                  <p className="text-sm font-medium text-slate-400">
+                    Developer
+                  </p>
 
-          <div className="rounded-2xl border border-white/10 bg-white/5 p-5">
+                  <p className="mt-1 text-lg font-semibold text-white">
+                    Productivity
+                  </p>
+                </div>
+              </div>
 
-            <div className="w-fit rounded-xl bg-fuchsia-500/10 p-3">
-              <Terminal className="h-5 w-5 text-fuchsia-400" />
+              <p className="mt-3 text-xs text-slate-600">
+                Tools for developers
+              </p>
+
             </div>
 
-            <p className="mt-5 text-2xl font-bold">
-              Developer
-            </p>
+            {/* Availability */}
 
-            <p className="mt-1 text-sm text-slate-500">
-              Productivity tools
-            </p>
+            <div className="border-l border-emerald-500/30 pl-4">
 
-          </div>
+              <div className="flex items-center gap-3">
+                <div className="flex h-10 w-10 items-center justify-center rounded-lg bg-emerald-500/10">
+                  <Zap className="h-5 w-5 text-emerald-400" />
+                </div>
 
-          {/* Availability */}
+                <div>
+                  <p className="text-sm font-medium text-slate-400">
+                    Availability
+                  </p>
 
-          <div className="rounded-2xl border border-white/10 bg-white/5 p-5">
+                  <p className="mt-1 text-lg font-semibold text-white">
+                    24/7
+                  </p>
+                </div>
+              </div>
 
-            <div className="w-fit rounded-xl bg-emerald-500/10 p-3">
-              <Zap className="h-5 w-5 text-emerald-400" />
+              <p className="mt-3 text-xs text-slate-600">
+                AI availability
+              </p>
+
             </div>
 
-            <p className="mt-5 text-2xl font-bold">
-              24/7
-            </p>
-
-            <p className="mt-1 text-sm text-slate-500">
-              AI availability
-            </p>
-
           </div>
-
         </div>
 
         {/* =========================

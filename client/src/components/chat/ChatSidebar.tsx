@@ -9,6 +9,9 @@ type Conversation = {
   updatedAt: string;
 };
 
+const API_URL =
+  process.env.NEXT_PUBLIC_API_URL || "http://localhost:5000";
+
 export default function ChatSidebar() {
   const router = useRouter();
   const searchParams = useSearchParams();
@@ -33,7 +36,7 @@ export default function ChatSidebar() {
       }
 
       const response = await fetch(
-        "http://localhost:5000/api/ai/conversations",
+        `${API_URL}/api/ai/conversations`,
         {
           method: "GET",
           headers: {
@@ -97,7 +100,7 @@ export default function ChatSidebar() {
       if (!token) return;
 
       const response = await fetch(
-        `http://localhost:5000/api/ai/conversations/${conversationId}`,
+        `${API_URL}/api/ai/conversations/${conversationId}`,
         {
           method: "DELETE",
           headers: {

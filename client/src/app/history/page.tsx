@@ -12,6 +12,9 @@ import {
   Sparkles,
 } from "lucide-react";
 
+const API_URL =
+  process.env.NEXT_PUBLIC_API_URL || "http://localhost:5000";
+
 type Message = {
   role: "user" | "assistant";
   content: string;
@@ -50,7 +53,7 @@ export default function HistoryPage() {
       }
 
       const response = await fetch(
-        "http://localhost:5000/api/history",
+        `${API_URL}/api/history`,
         {
           method: "GET",
           headers: {
@@ -167,7 +170,7 @@ export default function HistoryPage() {
       const token = localStorage.getItem("token");
 
       const response = await fetch(
-        `http://localhost:5000/api/history/${id}`,
+        `${API_URL}/api/history/${id}`,
         {
           method: "DELETE",
           headers: {

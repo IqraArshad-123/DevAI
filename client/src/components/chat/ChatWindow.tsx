@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useState } from "react";
+import { Suspense, useEffect, useState } from "react";
 import { useRouter, useSearchParams } from "next/navigation";
 import ReactMarkdown from "react-markdown";
 import remarkGfm from "remark-gfm";
@@ -23,7 +23,10 @@ type Message = {
 // COMPONENT
 // =====================================================
 
-export default function ChatWindow() {
+const API_URL =
+  process.env.NEXT_PUBLIC_API_URL || "http://localhost:5000";
+
+function ChatWindowContent() {
   const router = useRouter();
   const searchParams = useSearchParams();
 
@@ -96,7 +99,7 @@ export default function ChatWindow() {
         }
 
         const response = await fetch(
-          `http://localhost:5000/api/ai/conversations/${conversationId}`,
+          `${API_URL}/api/ai/conversations/${conversationId}`,
           {
             method: "GET",
             headers: {
@@ -178,7 +181,7 @@ export default function ChatWindow() {
       }
 
       const response = await fetch(
-        "http://localhost:5000/api/ai/chat",
+        `${API_URL}/api/ai/chat`,
         {
           method: "POST",
           headers: {
@@ -301,7 +304,7 @@ export default function ChatWindow() {
       }
 
       const response = await fetch(
-        "http://localhost:5000/api/ai/edit-message",
+        `${API_URL}/api/ai/edit-message`,
         {
           method: "POST",
           headers: {
@@ -434,7 +437,7 @@ export default function ChatWindow() {
         }
 
         const response = await fetch(
-          "http://localhost:5000/api/ai/regenerate",
+          `${API_URL}/api/ai/regenerate`,
           {
             method: "POST",
             headers: {
@@ -1281,5 +1284,17 @@ export default function ChatWindow() {
       </div>
 
     </div>
+  );
+}
+
+// =====================================================
+// SUSPENSE BOUNDARY
+// =====================================================
+
+export default function ChatWindow() {
+  return (
+    <Suspense fallback={null}>
+      <ChatWindowContent />
+    </Suspense>
   );
 }

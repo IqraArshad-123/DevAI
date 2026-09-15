@@ -27,7 +27,7 @@ type Theme = "dark" | "light" | "system";
 
 type ResponseStyle =
   | "concise"
-  |  "balanced"
+  | "balanced"
   | "detailed";
 
 type UserSettings = {
@@ -36,6 +36,9 @@ type UserSettings = {
   autoSave: boolean;
   responseStyle: ResponseStyle;
 };
+
+const API_URL =
+  process.env.NEXT_PUBLIC_API_URL || "http://localhost:5000";
 
 export default function SettingsPage() {
   const router = useRouter();
@@ -104,7 +107,7 @@ export default function SettingsPage() {
       }
 
       const response = await fetch(
-        "http://localhost:5000/api/auth/me",
+        `${API_URL}/api/auth/me`,
         {
           headers: {
             Authorization: `Bearer ${token}`,
@@ -217,7 +220,7 @@ export default function SettingsPage() {
       }
 
       const response = await fetch(
-        "http://localhost:5000/api/auth/settings",
+        `${API_URL}/api/auth/settings`,
         {
           method: "PUT",
           headers: {
@@ -309,7 +312,7 @@ export default function SettingsPage() {
       }
 
       const response = await fetch(
-        "http://localhost:5000/api/auth/change-password",
+        `${API_URL}/api/auth/change-password`,
         {
           method: "PUT",
           headers: {

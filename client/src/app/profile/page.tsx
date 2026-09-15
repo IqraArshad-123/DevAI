@@ -23,7 +23,8 @@ type UserData = {
   avatar?: string;
 };
 
-const API_URL = "http://localhost:5000/api/auth/me";
+const API_URL =
+  `${process.env.NEXT_PUBLIC_API_URL || "http://localhost:5000"}/api/auth/me`;
 
 export default function ProfilePage() {
   const router = useRouter();

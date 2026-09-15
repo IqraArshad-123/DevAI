@@ -2,6 +2,8 @@
 
 import { useEffect, useState } from "react";
 
+const API_URL =
+`${process.env.NEXT_PUBLIC_API_URL || "http://localhost:5000"}/api/notes`;
 type Note = {
   _id: string;
   title: string;
@@ -33,12 +35,6 @@ export default function NotesPage() {
     useState<string | null>(null);
   const [pinningId, setPinningId] =
     useState<string | null>(null);
-
-  // =====================================================
-  // API BASE URL
-  // =====================================================
-
-  const API_URL = "http://localhost:5000/api/notes";
 
   // =====================================================
   // LOAD NOTES
