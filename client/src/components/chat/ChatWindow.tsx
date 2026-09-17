@@ -578,26 +578,37 @@ function ChatWindowContent() {
   // ===================================================
 
   return (
-    <div className="flex min-h-[calc(100vh-2rem)] flex-col overflow-hidden rounded-3xl border border-white/10 bg-[#080b18] shadow-2xl shadow-black/30">
+    <div className="flex min-h-screen w-full min-w-0 flex-col overflow-hidden bg-[#080b18] sm:min-h-[calc(100vh-2rem)] sm:rounded-3xl sm:border sm:border-white/10 sm:shadow-2xl sm:shadow-black/30">
 
       {/* =====================================================
           HEADER
       ===================================================== */}
 
-      <div className="flex shrink-0 items-center justify-between border-b border-white/10 bg-[#0b0f24]/95 px-5 py-4 backdrop-blur sm:px-7 sm:py-5">
+      <div className="flex shrink-0 items-center justify-between border-b border-white/10 bg-[#0b0f24]/95 px-3 py-3 backdrop-blur sm:px-7 sm:py-5">
 
-        <div className="flex items-center gap-3">
+        <div className="flex min-w-0 items-center gap-2 sm:gap-3">
 
-          <div className="flex h-12 w-12 items-center justify-center rounded-2xl bg-linear-to-br from-violet-600 to-blue-500 text-2xl text-white shadow-lg shadow-violet-600/30">
+          <button
+            type="button"
+            aria-label="Open chat menu"
+            onClick={() =>
+              window.dispatchEvent(new CustomEvent("devai:toggle-sidebar"))
+            }
+            className="flex h-10 w-10 shrink-0 items-center justify-center rounded-xl border border-white/10 bg-white/5 text-lg text-slate-300 transition hover:border-violet-500/30 hover:bg-violet-500/10 hover:text-white md:hidden"
+          >
+            ☰
+          </button>
+
+          <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-xl bg-linear-to-br from-violet-600 to-blue-500 text-xl text-white shadow-lg shadow-violet-600/30 sm:h-12 sm:w-12 sm:rounded-2xl sm:text-2xl">
             ✦
           </div>
 
           <div>
-            <h1 className="text-xl font-bold tracking-tight text-white">
+            <h1 className="text-lg font-bold tracking-tight text-white sm:text-xl">
               Dev AI
             </h1>
 
-            <div className="mt-0.5 flex items-center gap-2 text-sm text-slate-400">
+            <div className="mt-0.5 flex items-center gap-1.5 text-xs text-slate-400 sm:gap-2 sm:text-sm">
               <span className="h-2 w-2 rounded-full bg-emerald-400 shadow-sm shadow-emerald-400/70" />
 
               AI Assistant
@@ -616,7 +627,7 @@ function ChatWindowContent() {
           MESSAGES
       ===================================================== */}
 
-      <div className="flex-1 overflow-y-auto px-4 py-6 sm:px-8 sm:py-8">
+      <div className="min-w-0 flex-1 overflow-y-auto px-3 py-5 sm:px-8 sm:py-8">
 
         <div className="mx-auto max-w-5xl space-y-7">
 
@@ -625,26 +636,26 @@ function ChatWindowContent() {
           ================================================= */}
 
           {messages.length === 0 && (
-            <div className="flex min-h-full items-center justify-center py-20 text-center">
+            <div className="flex min-h-full items-center justify-center px-1 py-12 text-center sm:px-0 sm:py-20">
 
-              <div className="max-w-2xl">
+              <div className="w-full max-w-2xl">
 
-                <div className="mx-auto mb-7 flex h-20 w-20 items-center justify-center rounded-3xl border border-violet-500/20 bg-linear-to-br from-violet-600/20 to-blue-500/10 text-4xl text-violet-300 shadow-xl shadow-violet-950/30">
+                <div className="mx-auto mb-6 flex h-16 w-16 items-center justify-center rounded-3xl border border-violet-500/20 bg-linear-to-br from-violet-600/20 to-blue-500/10 text-3xl text-violet-300 shadow-xl shadow-violet-950/30 sm:h-20 sm:w-20 sm:rounded-3xl sm:text-4xl">
                   ✦
                 </div>
 
-                <h2 className="text-3xl font-bold tracking-tight text-white sm:text-4xl">
+                <h2 className="text-2xl font-bold tracking-tight text-white sm:text-4xl">
                   How can I help you?
                 </h2>
 
-                <p className="mx-auto mt-4 max-w-xl text-base leading-7 text-slate-400 sm:text-lg">
+                <p className="mx-auto mt-3 max-w-xl px-2 text-sm leading-6 text-slate-400 sm:mt-4 sm:px-0 sm:text-lg sm:leading-7">
                   Ask Dev AI anything
                   about coding,
                   learning, debugging
                   or development.
                 </p>
 
-                <div className="mt-9 grid gap-3 sm:grid-cols-3">
+                <div className="mt-7 grid gap-3 sm:mt-9 sm:grid-cols-3">
 
                   <button
                     onClick={() =>
@@ -717,7 +728,7 @@ function ChatWindowContent() {
                 >
 
                   <div
-                    className={`flex w-full items-start gap-3 ${
+                    className={`flex w-full min-w-0 items-start gap-2 sm:gap-3 ${
                       msg.role ===
                       "user"
                         ? "max-w-3xl flex-row-reverse"
@@ -730,7 +741,7 @@ function ChatWindowContent() {
                     ================================================= */}
 
                     <div
-                      className={`flex h-10 w-10 shrink-0 items-center justify-center rounded-xl text-sm font-semibold ${
+                      className={`flex h-8 w-8 shrink-0 items-center justify-center rounded-xl text-xs font-semibold sm:h-10 sm:w-10 sm:text-sm ${
                         msg.role ===
                         "user"
                           ? "bg-linear-to-br from-violet-600 to-purple-600 text-white shadow-lg shadow-violet-900/30"
@@ -758,7 +769,7 @@ function ChatWindowContent() {
                         <>
 
                           {isEditing ? (
-                            <div className="min-w-70 rounded-2xl bg-linear-to-r from-violet-600 to-purple-600 p-4 shadow-xl shadow-violet-950/30 sm:min-w-112.5">
+                            <div className="w-full max-w-full rounded-2xl bg-linear-to-r from-violet-600 to-purple-600 p-4 shadow-xl shadow-violet-950/30 sm:min-w-112.5">
 
                               <textarea
                                 value={
@@ -814,9 +825,9 @@ function ChatWindowContent() {
                           ) : (
                             <div className="relative">
 
-                              <div className="rounded-2xl bg-linear-to-r from-violet-600 to-purple-600 px-5 py-4 text-white shadow-xl shadow-violet-950/30 sm:px-6 sm:py-5">
+                              <div className="max-w-full wrap-break-word rounded-2xl bg-linear-to-r from-violet-600 to-purple-600 px-4 py-3 text-white shadow-xl shadow-violet-950/30 sm:px-6 sm:py-5">
 
-                                <p className="text-[16px] leading-7 sm:text-[17px] sm:leading-8">
+                                <p className="wrap-break-word text-[15px] leading-6 sm:text-[17px] sm:leading-8">
                                   {
                                     msg.content
                                   }
@@ -864,9 +875,9 @@ function ChatWindowContent() {
 
                         <>
 
-                          <div className="rounded-2xl border border-white/10 bg-[#111528] px-5 py-4 text-slate-200 shadow-xl shadow-black/20 sm:px-6 sm:py-5">
+                          <div className="min-w-0 max-w-full rounded-2xl border border-white/10 bg-[#111528] px-4 py-3 text-slate-200 shadow-xl shadow-black/20 sm:px-6 sm:py-5">
 
-                            <div className="prose prose-invert max-w-none text-[16px] leading-8 sm:text-[17px] sm:leading-8">
+                            <div className="prose prose-invert max-w-none wrap-break-word text-[15px] leading-7 sm:text-[17px] sm:leading-8">
 
                               <ReactMarkdown
                                 remarkPlugins={[
@@ -1014,11 +1025,11 @@ function ChatWindowContent() {
                                       "text";
 
                                     return (
-                                      <div className="my-6 overflow-hidden rounded-xl border border-white/10 bg-[#070914] shadow-inner">
+                                      <div className="my-5 min-w-0 max-w-full overflow-hidden rounded-xl border border-white/10 bg-[#070914] shadow-inner sm:my-6">
 
                                         {/* CODE HEADER */}
 
-                                        <div className="flex items-center justify-between border-b border-white/10 bg-white/5 px-4 py-2">
+                                        <div className="flex items-center justify-between gap-2 border-b border-white/10 bg-white/5 px-3 py-2 sm:px-4">
 
                                           <span className="text-xs font-medium uppercase tracking-wide text-slate-400">
                                             {
@@ -1077,7 +1088,7 @@ function ChatWindowContent() {
                                   pre: ({
                                     children,
                                   }) => (
-                                    <pre className="my-6 overflow-x-auto rounded-xl border border-white/10 bg-[#070914] p-0 shadow-inner">
+                                    <pre className="my-5 max-w-full overflow-x-auto rounded-xl border border-white/10 bg-[#070914] p-0 shadow-inner">
                                       {
                                         children
                                       }
@@ -1105,7 +1116,7 @@ function ChatWindowContent() {
                                   table: ({
                                     children,
                                   }) => (
-                                    <div className="my-6 overflow-x-auto rounded-xl border border-white/10">
+                                    <div className="my-5 max-w-full overflow-x-auto rounded-xl border border-white/10 sm:my-6">
                                       <table className="w-full border-collapse text-left text-sm">
                                         {
                                           children
@@ -1230,9 +1241,9 @@ function ChatWindowContent() {
           INPUT
       ===================================================== */}
 
-      <div className="shrink-0 border-t border-white/10 bg-[#0b0f24]/95 p-4 backdrop-blur sm:p-5">
+      <div className="shrink-0 border-t border-white/10 bg-[#0b0f24]/95 p-3 pb-[max(0.75rem,env(safe-area-inset-bottom))] backdrop-blur sm:p-5">
 
-        <div className="mx-auto flex max-w-5xl items-center gap-3 rounded-2xl border border-white/10 bg-white/5 p-2 transition focus-within:border-violet-500/50 focus-within:bg-white/7">
+        <div className="mx-auto flex max-w-5xl items-center gap-2 rounded-2xl border border-white/10 bg-white/5 p-2 transition focus-within:border-violet-500/50 focus-within:bg-white/7">
 
           <input
             type="text"
@@ -1266,7 +1277,7 @@ function ChatWindowContent() {
               editLoading ||
               !message.trim()
             }
-            className="rounded-xl bg-linear-to-r from-violet-600 to-purple-600 px-6 py-3 text-[15px] font-semibold text-white shadow-lg shadow-violet-900/30 transition hover:scale-[1.02] hover:from-violet-500 hover:to-purple-500 disabled:cursor-not-allowed disabled:opacity-40 disabled:hover:scale-100"
+            className="shrink-0 rounded-xl bg-linear-to-r from-violet-600 to-purple-600 px-4 py-3 text-[14px] sm:px-6 sm:text-[15px] font-semibold text-white shadow-lg shadow-violet-900/30 transition hover:scale-[1.02] hover:from-violet-500 hover:to-purple-500 disabled:cursor-not-allowed disabled:opacity-40 disabled:hover:scale-100"
           >
             {loading
               ? "..."

@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useState } from "react";
+import { Suspense, useEffect, useState } from "react";
 import { useRouter, useSearchParams } from "next/navigation";
 
 type Conversation = {
@@ -12,7 +12,7 @@ type Conversation = {
 const API_URL =
   process.env.NEXT_PUBLIC_API_URL || "http://localhost:5000";
 
-export default function ChatSidebar() {
+function ChatSidebarContent() {
   const router = useRouter();
   const searchParams = useSearchParams();
 
@@ -21,6 +21,29 @@ export default function ChatSidebar() {
   const [conversations, setConversations] = useState<Conversation[]>([]);
 
   const [loading, setLoading] = useState(true);
+  const [sidebarOpen, setSidebarOpen] = useState(false);
+
+  // =====================================================
+  // MOBILE SIDEBAR EVENTS
+  // =====================================================
+
+  useEffect(() => {
+    const handleToggleSidebar = () => {
+      setSidebarOpen((prev) => !prev);
+    };
+
+    const handleCloseSidebar = () => {
+      setSidebarOpen(false);
+    };
+
+    window.addEventListener("devai:toggle-sidebar", handleToggleSidebar);
+    window.addEventListener("devai:close-sidebar", handleCloseSidebar);
+
+    return () => {
+      window.removeEventListener("devai:toggle-sidebar", handleToggleSidebar);
+      window.removeEventListener("devai:close-sidebar", handleCloseSidebar);
+    };
+  }, []);
 
   // =====================================================
   // LOAD CONVERSATIONS
@@ -72,6 +95,7 @@ export default function ChatSidebar() {
   // =====================================================
 
   const handleNewChat = () => {
+    setSidebarOpen(false);
     router.push("/chat");
   };
 
@@ -80,6 +104,7 @@ export default function ChatSidebar() {
   // =====================================================
 
   const handleOpenConversation = (conversationId: string) => {
+    setSidebarOpen(false);
     router.push(`/chat?conversationId=${conversationId}`);
   };
 
@@ -130,7 +155,21 @@ export default function ChatSidebar() {
   };
 
   return (
-    <aside className="flex h-full w-72 shrink-0 flex-col border-r border-white/10 bg-[#080c1d]">
+    <>
+      {sidebarOpen && (
+        <button
+          type="button"
+          aria-label="Close sidebar"
+          onClick={() => setSidebarOpen(false)}
+          className="fixed inset-0 z-40 bg-black/60 md:hidden"
+        />
+      )}
+
+      <aside
+        className={`fixed inset-y-0 left-0 z-50 flex h-screen w-[min(18rem,calc(100vw-1rem))] shrink-0 flex-col border-r border-white/10 bg-[#080c1d] transition-transform duration-300 md:static md:z-auto md:h-full md:w-72 md:translate-x-0 ${
+          sidebarOpen ? "translate-x-0" : "-translate-x-full"
+        }`}
+      >
       {/* =====================================================
           HEADER
       ===================================================== */}
@@ -176,7 +215,10 @@ export default function ChatSidebar() {
           </div>
 
           <button
-            onClick={() => router.push("/notes")}
+            onClick={() => {
+              setSidebarOpen(false);
+              router.push("/notes");
+            }}
             className="group relative w-full overflow-hidden rounded-2xl border border-violet-500/20 bg-linear-to-br from-violet-500/10 via-blue-500/5 to-transparent p-3.5 text-left transition-all duration-300 hover:-translate-y-0.5 hover:border-violet-400/40 hover:bg-violet-500/15 hover:shadow-lg hover:shadow-violet-950/30"
           >
             {/* GLOW */}
@@ -302,6 +344,19 @@ export default function ChatSidebar() {
           </p>
         </div>
       </div>
-    </aside>
+      </aside>
+    </>
+  );
+}
+
+// =====================================================
+// SUSPENSE BOUNDARY
+// =====================================================
+
+export default function ChatSidebar() {
+  return (
+    <Suspense fallback={null}>
+      <ChatSidebarContent />
+    </Suspense>
   );
 }
